@@ -5,12 +5,15 @@
 Lexer::Lexer(const std::string source): source(source){}
 
 std::vector<Token> Lexer::lex(){
+    
     std::vector<Token> tokens;
+    std::cout<< std::endl << "Source code: " << source << std::endl<<std::endl;
 
     while(!isAtEnd()){
         skipWhiteSpace();
         char ch = currentChar();
         Token token;
+
         if(std::isalpha(ch)){
             token = identifier();
         }
@@ -39,7 +42,7 @@ char Lexer::currentChar(){
 }
 
 void Lexer::advance(){
-    while(!isAtEnd()){
+    if (!isAtEnd()) { 
         current++;
     }
 }
@@ -83,7 +86,7 @@ Token Lexer::string(){
     }
     advance();
     Token token;
-    token.type = TokenType::NUMBER;
+    token.type = TokenType::STRING;
     token.lexeme = lexeme;
     return token;
 }

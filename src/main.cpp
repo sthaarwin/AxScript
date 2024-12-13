@@ -38,6 +38,7 @@ class AxScript{
             std::vector<Token> tokens = lexer.lex();
             for(Token token : tokens){
                 std::cout <<" Token : "<< tokenTypeToString(token.type) << "\n Lexeme : " << token.lexeme << std::endl;
+                std::cout << std::endl;
             }
         }
 };
