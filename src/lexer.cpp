@@ -1,29 +1,28 @@
+//lexer.cpp
+
 #include "lexer.h"
 #include <cctype>
-#include<iostream>
+#include <iostream>
 
-Lexer::Lexer(const std::string source): source(source){}
+Lexer::Lexer(const std::string source): source(source), current(0), line(1) {}
 
-std::vector<Token> Lexer::lex(){
-    
+std::vector<Token> Lexer::lex() {
     std::vector<Token> tokens;
-    std::cout<< std::endl << "Source code: " << source << std::endl<<std::endl;
-
-    while(!isAtEnd()){
+    while (!isAtEnd()) {
         skipWhiteSpace();
         char ch = currentChar();
         Token token;
 
-        if(std::isalpha(ch)){
+        if (std::isalpha(ch)) {
             token = identifier();
         }
-        else if(std::isdigit(ch)){
+        else if (std::isdigit(ch)) {
             token = number();
         }  
-        else if(ch == '"'){
+        else if (ch == '"') {
             token = string();
         }
-        else{
+        else {
             token.type = identifyToken(ch);
             token.lexeme = std::string(1, ch);
             advance();
@@ -37,18 +36,18 @@ std::vector<Token> Lexer::lex(){
     return tokens;
 }
 
-char Lexer::currentChar(){
+char Lexer::currentChar() {
     return source[current];
 }
 
-void Lexer::advance(){
+void Lexer::advance() {
     if (!isAtEnd()) { 
         current++;
     }
 }
 
-TokenType Lexer::identifyToken(char ch){
-     switch (ch) {
+TokenType Lexer::identifyToken(char ch) {
+    switch (ch) {
         case '(': return TokenType::LEFT_PAREN;
         case ')': return TokenType::RIGHT_PAREN;
         case '{': return TokenType::LEFT_BRACE;
@@ -67,50 +66,176 @@ TokenType Lexer::identifyToken(char ch){
         default: return TokenType::EOF_TOKEN;
     }
 }
-void Lexer::skipWhiteSpace(){
-    while(!isAtEnd() && (currentChar() == ' ' || currentChar() == '\t' || currentChar() == '\n')){
+
+void Lexer::skipWhiteSpace() {
+    while (!isAtEnd() && (currentChar() == ' ' || currentChar() == '\t' || currentChar() == '\n')) {
+        if (currentChar() == '\n') {
+            line++;
+        }
         advance();
     }
 }
-bool Lexer::isAtEnd() { 
+
+bool Lexer::isAtEnd() {
     return current >= source.size();
 }
 
+char Lexer::peek() {
+    if (isAtEnd()) return '\0';
+    return source[current];
+}
 
-Token Lexer::string(){
-    std::string lexeme;
+bool Lexer::match(char expected) {
+    if (isAtEnd()) return false;
+    if (source[current] != expected) return false;
+    current++;
+    return true;
+}
+
+void Lexer::addToken(TokenType type)
+{
+    std::string lexeme = source.substr(current, 1);
+    tokens.push_back(Token(type, lexeme, "", line));
     advance();
-    while(!isAtEnd() && currentChar() != '"'){
+}
+
+Token Lexer::string() {
+    std::string lexeme;
+    advance();  // Skip opening quote
+    while (!isAtEnd() && currentChar() != '"') {
         lexeme += currentChar();
         advance();
     }
-    advance();
+    advance();  // Skip closing quote
+    
     Token token;
     token.type = TokenType::STRING;
     token.lexeme = lexeme;
     return token;
 }
 
-Token Lexer::number(){
+Token Lexer::number() {
     std::string lexeme;
-    while(std::isalnum(currentChar())){
+    while (!isAtEnd() && std::isdigit(currentChar())) {
         lexeme += currentChar();
         advance();
     }
+    
+    // Optional: Handle decimal numbers
+    if (!isAtEnd() && currentChar() == '.' && std::isdigit(peek())) {
+        lexeme += currentChar();
+        advance();
+        while (!isAtEnd() && std::isdigit(currentChar())) {
+            lexeme += currentChar();
+            advance();
+        }
+    }
+    
     Token token;
     token.type = TokenType::NUMBER;
     token.lexeme = lexeme;
     return token;
 }
 
-Token Lexer::identifier(){
+Token Lexer::identifier() {
     std::string lexeme;
-    while(std::isalnum(currentChar()) || currentChar() == '_'){
+    while (!isAtEnd() && (std::isalnum(currentChar()) || currentChar() == '_')) {
         lexeme += currentChar();
         advance();
     }
-    Token token;
-    token.type = TokenType::IDENTIFIER;
-    token.lexeme = lexeme;
-    return token;
+    
+    auto it = keywords.find(lexeme);
+    TokenType type = (it != keywords.end()) ? it->second : TokenType::IDENTIFIER;
+
+    return Token(type, lexeme, "", line);
+}
+
+void Lexer::scanToken()
+{
+    char ch = currentChar();
+    switch (ch)
+    {
+    case '(':
+        addToken(TokenType::LEFT_PAREN);
+        break;
+    case ')':
+        addToken(TokenType::RIGHT_PAREN);
+        break;
+    case '{':
+        addToken(TokenType::LEFT_BRACE);
+        break;
+    case '}':
+        addToken(TokenType::RIGHT_BRACE);
+        break;
+    case ',':
+        addToken(TokenType::COMMA);
+        break;
+    case '.':
+        addToken(TokenType::DOT);
+        break;
+    case '-':
+        addToken(TokenType::MINUS);
+        break;
+    case '+':
+        addToken(TokenType::PLUS);
+        break;
+    case ';':
+        addToken(TokenType::SEMICOLON);
+        break;
+    case '*':
+        addToken(TokenType::STAR);
+        break;
+    case '!':
+        addToken(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG);
+        break;
+    case '=':
+        addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL);
+        break;
+    case '<':
+        addToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS);
+        break;
+    case '>':
+        addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER);
+        break;
+    case '/':
+        if (match('/'))
+        {
+            while (currentChar() != '\n' && !isAtEnd())
+                advance();
+        }
+        else
+        {
+            addToken(TokenType::SLASH);
+        }
+        break;
+    case ' ':
+    case '\r':
+    case '\t':
+        break;
+    case '\n':
+        line++;
+        break;
+    case '"':
+        string();
+        break;
+    default:
+        if (std::isdigit(ch))
+        {
+            number();
+        }
+        else if (std::isalpha(ch))
+        {
+            identifier();
+        }
+        else
+        {
+            error(line, "Unexpected character.");
+        }
+        break;
+    }
+}
+
+void Lexer::error(int line, const std::string &message)
+{
+    std::cerr << "[line " << line << "] Error: " << message << std::endl;
 }

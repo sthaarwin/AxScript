@@ -1,3 +1,5 @@
+// tokens.cpp
+
 #include "tokens.h"
 
 std::string tokenTypeToString(TokenType type) {
@@ -40,7 +42,7 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::TRUE: return "TRUE";
         case TokenType::VAR: return "VAR";
         case TokenType::WHILE: return "WHILE";
-        case TokenType::EOF_TOKEN: return "EOF";
+        case TokenType::EOF_TOKEN: return "EOF_TOKEN";
         default: return "UNKNOWN";
     }
 }

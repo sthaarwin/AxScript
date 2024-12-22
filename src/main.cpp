@@ -1,3 +1,5 @@
+// main.cpp
+
 #include<iostream>
 #include<fstream>
 #include<string>
@@ -5,6 +7,8 @@
 #include<cstdlib>
 #include"lexer.h"
 #include"tokens.h"
+#include"parser.h"
+#include"interpreter.h"
 
 
 class AxScript{
@@ -23,13 +27,19 @@ class AxScript{
         }
         
         static void runPrompt(){
-            std::string line;
-            while(true){
-             std::cout << ">> ";
-             if(!std::getline(std::cin, line) || line.empty()){
-                 std::cout << std::endl;
-                 break;
-             }
+            while(true) {
+                std::cout << ">> ";
+                std::string line;
+                if(!std::getline(std::cin, line)) {
+                    break;  
+                }
+                
+                if(line.empty() || line == "exit") {
+                    std::cout << "\nExiting!" << std::endl;
+                    break;
+                }
+            
+                run(line);  
             }
         }
 
@@ -40,6 +50,13 @@ class AxScript{
                 std::cout <<" Token : "<< tokenTypeToString(token.type) << "\n Lexeme : " << token.lexeme << std::endl;
                 std::cout << std::endl;
             }
+            Parser parser(tokens);
+            std::unique_ptr<Expr> expression = parser.parse();
+
+            Interpreter interpreter;
+            std::variant<double, std::string> result = interpreter.interpret(expression);
+
+            std::visit([](auto&& arg) { std::cout << arg << std::endl; }, result);
         }
 };
 
@@ -54,4 +71,5 @@ int main(int argc, char* argv[]){
     else{
         AxScript::runPrompt();
     }
+    return 0;
 }

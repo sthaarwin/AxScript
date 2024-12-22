@@ -1,28 +1,58 @@
+// lexer.h
+
 #ifndef LEXER_H
 #define LEXER_H
+
 
 #include "tokens.h"
 #include <string>
 #include <vector>
+#include <unordered_map>
 
-class Lexer{
-    public:
-        Lexer(const std::string source);
-        std::vector<Token> lex();
+class Lexer
+{
 
-    private:
-        std::string source;
-        std::vector<Token> tokens;
+public:
+    Lexer(const std::string source);
 
-        size_t current = 0;
-        char currentChar();
-        void advance();
-        bool isAtEnd();
-        TokenType identifyToken(char ch);
-        void skipWhiteSpace();
-        Token string();
-        Token number();
-        Token identifier();    
+    std::vector<Token> lex();
+
+private:
+    std::string source;
+
+    size_t current;
+
+    int line;
+
+    std::unordered_map<std::string, TokenType> keywords;
+
+    std::vector<Token> tokens;
+
+    char currentChar();
+
+    void advance();
+
+    TokenType identifyToken(char ch);
+
+    void skipWhiteSpace();
+
+    bool isAtEnd();
+
+    char peek();
+
+    bool match(char expected);
+
+    void addToken(TokenType type);
+
+    Token string();
+
+    Token number();
+
+    Token identifier();
+
+    void scanToken();
+
+    void error(int line, const std::string &message);
 };
 
 #endif // LEXER_H

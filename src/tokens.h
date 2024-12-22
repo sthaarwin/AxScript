@@ -1,3 +1,5 @@
+// tokens.h
+
 #ifndef TOKEN_H
 #define TOKEN_H
 
@@ -13,9 +15,16 @@ enum class TokenType{
     SUPER, THIS, TRUE, VAR, WHILE, EOF_TOKEN
 };
 
-struct Token{
+struct Token {
     TokenType type;
     std::string lexeme;
+    std::string literal;  
+    int line;
+
+    Token(TokenType type = TokenType::EOF_TOKEN, 
+          std::string lexeme = "", 
+          std::string literal = "",
+          int line = 1) : type(type), lexeme(lexeme), literal(literal), line(line) {}
 };
 
 std::string tokenTypeToString(TokenType type);
