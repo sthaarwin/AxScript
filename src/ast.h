@@ -1,4 +1,6 @@
-#pragma once
+#ifndef AST_H
+#define AST_H
+
 
 #include <memory>
 #include <vector>
@@ -48,13 +50,43 @@ public:
     }
 };
 
-class PrintStmt : public Expr {
-public:
-    std::unique_ptr<Expr> expression;
+// class PrintStmt : public Expr {
+// public:
+//     std::unique_ptr<Expr> expression;
 
-    PrintStmt(std::unique_ptr<Expr> expression) : expression(std::move(expression)) {}
+//     PrintStmt(std::unique_ptr<Expr> expression) : expression(std::move(expression)) {}
 
-    void accept(Visitor* visitor) override {
-        visitor->visit(this);
-    }
+//     void accept(Visitor* visitor) override {
+//         visitor->visit(this);
+//     }
+// };
+
+class Stmt{
+  public:
+    virtual ~Stmt() = default;  
+    virtual void accept(Visitor* visitor) = 0;
 };
+
+class PrintStmt : public Stmt{
+    public:
+        std::unique_ptr<Expr> expression;
+        PrintStmt(std::unique_ptr<Expr> expression) : expression(std::move(expression)) {};
+
+        void accept(Visitor* visitor)override{
+            visitor->visit(this);
+        }
+};
+
+class VarStmt : public Stmt{
+    public:
+        Token name;
+        std::unique_ptr<Expr> initializer;
+        
+        VarStmt(Token name, std::unique_ptr<Expr> initializer):name(name),initializer(std::move(initializer)){}
+
+        void accept(Visitor* visitor)override{
+            visitor->visit(this);
+        }
+};
+
+#endif // AST_H

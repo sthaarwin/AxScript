@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PARSER_H
+#define PARSER_H
 
 #include "lexer.h"
 #include "ast.h"
@@ -10,24 +11,24 @@ class Parser {
 public:
     Parser(const std::vector<Token>& tokens) : tokens(tokens), current(0) {}
 
-    std::unique_ptr<Expr> parse() {
+    std::unique_ptr<Stmt> parse() {
         return statement();
+    }
+
+    std::unique_ptr<Stmt> printStmt() {
+        auto value = expression();
+        return std::make_unique<PrintStmt>(std::move(value));
     }
 
 private:
     const std::vector<Token>& tokens;
     size_t current;
 
-    std::unique_ptr<Expr> statement() {
+    std::unique_ptr<Stmt> statement() {
         if (match({TokenType::IDENTIFIER}) && previous().lexeme == "print") {
             return printStmt();
         }
         throw std::runtime_error("Unexpected token.");
-    }
-
-    std::unique_ptr<Expr> printStmt() {
-        auto value = expression();
-        return std::make_unique<PrintStmt>(std::move(value));
     }
 
     std::unique_ptr<Expr> expression() {
@@ -97,3 +98,5 @@ private:
         throw std::runtime_error(message);
     }
 };
+
+#endif

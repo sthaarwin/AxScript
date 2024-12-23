@@ -51,10 +51,10 @@ class AxScript{
                 std::cout << std::endl;
             }
             Parser parser(tokens);
-            std::unique_ptr<Expr> expression = parser.parse();
+            std::unique_ptr<Stmt> statement = parser.parse();
 
             Interpreter interpreter;
-            std::variant<double, std::string> result = interpreter.interpret(expression);
+            std::variant<double, std::string> result = interpreter.interpret(statement);
 
             std::visit([](auto&& arg) { std::cout << arg << std::endl; }, result);
         }

@@ -1,9 +1,11 @@
-#pragma once
+#ifndef VISITOR_H
+#define VISITOR_H
 
 class NumberExpr;
 class StringExpr;
 class BinaryExpr;
 class PrintStmt;
+class VarStmt;
 
 class Visitor {
 public:
@@ -11,4 +13,7 @@ public:
     virtual void visit(StringExpr* expr) = 0;
     virtual void visit(BinaryExpr* expr) = 0;
     virtual void visit(PrintStmt* stmt) = 0;
+    virtual void visit(VarStmt* stmt) = 0;
 };
+
+#endif // VISITOR_H

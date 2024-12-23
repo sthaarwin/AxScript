@@ -1,11 +1,17 @@
-#pragma once
+#ifndef INTERPRETER_H
+#define INTERPRETER_H
 
 #include "visitor.h"
 #include "ast.h"
+#include "environment.h"
 #include <iostream>
 #include <variant>
 
 class Interpreter : public Visitor {
+private:
+    std::variant<double, std::string> result;
+    Environment environment;
+
 public:
     void visit(NumberExpr* expr) override {
         result = expr->value;
@@ -37,11 +43,21 @@ public:
         std::visit([](auto&& arg) { std::cout << arg << std::endl; }, result);
     }
 
-    std::variant<double, std::string> interpret(std::unique_ptr<Expr>& expr) {
+    std::variant<double, std::string> interpret(std::unique_ptr<Stmt>& expr) {
         expr->accept(this);
         return result;
     }
 
-private:
-    std::variant<double, std::string> result;
+    void visit(VarStmt* stmt)override{
+        std::variant<double, std::string> value;
+        if(stmt -> initializer != nullptr){
+            stmt -> initializer -> accept(this);
+            value = result;
+        }else{
+            value = 0.0;
+        }
+        environment.define(stmt -> name.lexeme, value);
+    }
 };
+
+#endif //INTERPRETER_H
