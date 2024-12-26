@@ -1,1 +1,1 @@
-print("braces check", 5, "number check");
+print("braces check")
