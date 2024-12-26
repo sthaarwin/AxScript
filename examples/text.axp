@@ -1,1 +1,4 @@
-print("braces check")
+print "hello";
+print "world";
+print "the is new line";
+print "another line";

@@ -21,6 +21,10 @@ public:
         result = expr->value;
     }
 
+     void visit(VariableExpr* expr) override { 
+        result = environment.get(expr->name.lexeme);
+    }
+
     void visit(BinaryExpr* expr) override {
         expr->left->accept(this);
         auto leftValue = result;

@@ -4,7 +4,24 @@
 #include <cctype>
 #include <iostream>
 
-Lexer::Lexer(const std::string source): source(source), current(0), line(1) {}
+Lexer::Lexer(const std::string source): source(source), current(0), line(1) {
+    keywords["and"] = TokenType::AND;
+    keywords["class"] = TokenType::CLASS;
+    keywords["else"] = TokenType::ELSE;
+    keywords["false"] = TokenType::FALSE;
+    keywords["for"] = TokenType::FOR;
+    keywords["fun"] = TokenType::FUN;
+    keywords["if"] = TokenType::IF;
+    keywords["nil"] = TokenType::NIL;
+    keywords["or"] = TokenType::OR;
+    keywords["print"] = TokenType::PRINT;
+    keywords["return"] = TokenType::RETURN;
+    keywords["super"] = TokenType::SUPER;
+    keywords["this"] = TokenType::THIS;
+    keywords["true"] = TokenType::TRUE;
+    keywords["var"] = TokenType::VAR;
+    keywords["while"] = TokenType::WHILE;
+}
 
 std::vector<Token> Lexer::lex() {
     std::vector<Token> tokens;
