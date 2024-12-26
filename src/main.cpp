@@ -46,17 +46,17 @@ class AxScript{
         static void run(std::string source){
           Lexer lexer(source);
             std::vector<Token> tokens = lexer.lex();
-            for(Token token : tokens){
-                std::cout <<" Token : "<< tokenTypeToString(token.type) << "\n Lexeme : " << token.lexeme << std::endl;
-                std::cout << std::endl;
-            }
+            // for(Token token : tokens){
+            //     std::cout <<" Token : "<< tokenTypeToString(token.type) << "\n Lexeme : " << token.lexeme << std::endl;
+            //     std::cout << std::endl;
+            // }
             Parser parser(tokens);
             std::unique_ptr<Stmt> statement = parser.parse();
 
             Interpreter interpreter;
             std::variant<double, std::string> result = interpreter.interpret(statement);
 
-            std::visit([](auto&& arg) { std::cout << arg << std::endl; }, result);
+            // std::visit([](auto&& arg) { std::cout << arg << std::endl; }, result);
         }
 };
 
