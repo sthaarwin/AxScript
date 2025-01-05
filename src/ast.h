@@ -102,4 +102,15 @@ public:
     }
 };
 
+class InputStmt : public Stmt
+{
+    public:
+        Token variableName;
+        InputStmt(Token variablename):variableName(variablename){}
+        void accept(Visitor *visitor) override
+        {
+            visitor->visit(this);
+        }
+};
+
 #endif // AST_H

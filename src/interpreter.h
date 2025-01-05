@@ -62,6 +62,21 @@ public:
         }
         environment.define(stmt -> name.lexeme, value);
     }
+
+    void visit(InputStmt* stmt) override
+    {
+        std::string input;
+       // std::cout << "> ";
+        std::getline(std::cin, input);
+        
+        //try to convert to number if possible
+        try{
+            double value = std::stod(input);
+            environment.define(stmt -> variableName.lexeme, value);
+        }catch(...){
+            environment.define(stmt -> variableName.lexeme, input);
+        }
+    }
 };
 
 #endif //INTERPRETER_H

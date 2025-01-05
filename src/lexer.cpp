@@ -15,6 +15,7 @@ Lexer::Lexer(const std::string source): source(source), current(0), line(1) {
     keywords["nil"] = TokenType::NIL;
     keywords["or"] = TokenType::OR;
     keywords["print"] = TokenType::PRINT;
+    keywords["input"] = TokenType::INPUT;
     keywords["return"] = TokenType::RETURN;
     keywords["super"] = TokenType::SUPER;
     keywords["this"] = TokenType::THIS;

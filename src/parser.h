@@ -41,6 +41,7 @@ private:
                 case TokenType::IF:
                 case TokenType::WHILE:
                 case TokenType::PRINT:
+                case TokenType::INPUT:
                 case TokenType::RETURN:
                     return;
                 default:
@@ -74,6 +75,9 @@ private:
         if (match({TokenType::PRINT})) {
             return printStatement();
         }
+        if(match({TokenType::INPUT})){
+            return InputStatement();
+        }
         throw std::runtime_error("Expect statement.");
     }
 
@@ -81,6 +85,12 @@ private:
         auto value = expression();
         consume(TokenType::SEMICOLON, "Expect ';' after value.");
         return std::make_unique<PrintStmt>(std::move(value));
+    }
+
+    std::unique_ptr<Stmt>InputStatement(){
+        Token variableName = consume(TokenType::IDENTIFIER, "Expect variable name.");
+        consume(TokenType::SEMICOLON, "Expect ';' after variable name.");
+        return std::make_unique<InputStmt>(variableName);
     }
 
     std::unique_ptr<Expr> expression() {

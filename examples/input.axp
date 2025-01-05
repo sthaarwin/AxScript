@@ -1,0 +1,5 @@
+var num;
+print "Enter a number : ";
+input num;
+print "you have entered : ";
+print num;

@@ -20,6 +20,13 @@ var result = x + 8;
 print result;
 ```
 
+```
+var num;
+print "Enter a number : ";
+input num;
+print num;
+```
+
 ## Project Structure
 
 ```
@@ -91,6 +98,11 @@ var name = value;
 ### Print Statement
 ```
 print expression;
+```
+
+### Input Statement
+```
+input variableName;
 ```
 
 ### Expressions
