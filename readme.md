@@ -79,7 +79,7 @@ make
 ```bash
 ./axscript i m
 >> print "hello world!";
-42
+hello world!
 ```
 
 ## Language Syntax
