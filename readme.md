@@ -59,8 +59,7 @@ cd build
 
 3. Generate build files and compile:
 ```bash
-cmake ..
-make
+make all
 ```
 
 4. Run the executable:
