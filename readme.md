@@ -131,7 +131,7 @@ The interpreter provides error messages for:
 
 ## Future Improvements
 
-- [ ] Control flow (if/else statements)
+- [x] Control flow (if/else/elseif statements)
 - [ ] Loops (while, for)
 - [ ] Functions
 - [ ] More data types (boolean, arrays)

@@ -1,0 +1,5 @@
+var num = 3;
+var target = 5;
+if (num > target) print "greater";
+else if (num < target) print "less";
+else print "equal";

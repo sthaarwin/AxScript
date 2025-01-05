@@ -8,6 +8,8 @@ class PrintStmt;
 class VarStmt;
 class VariableExpr;
 class InputStmt;
+class IfStmt;
+class ElseIfStmt;
 
 class Visitor {
 public:
@@ -18,6 +20,8 @@ public:
     virtual void visit(PrintStmt* stmt) = 0;
     virtual void visit(VarStmt* stmt) = 0;
     virtual void visit(InputStmt* stmt) = 0;
+    virtual void visit(IfStmt* stmt) = 0;
+    virtual void visit(ElseIfStmt* stmt) = 0;
 };
 
 #endif // VISITOR_H

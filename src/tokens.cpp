@@ -29,6 +29,7 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::AND: return "AND";
         case TokenType::CLASS: return "CLASS";
         case TokenType::ELSE: return "ELSE";
+        case TokenType::ELSEIF: return "ELSEIF";
         case TokenType::FALSE: return "FALSE";
         case TokenType::FUN: return "FUN";
         case TokenType::FOR: return "FOR";

@@ -1,5 +1,4 @@
 // main.cpp
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -10,14 +9,11 @@
 #include "parser.h"
 #include "interpreter.h"
 
-class AxScript
-{
+class AxScript {
 public:
-    static void runFile(std::string filename)
-    {
+    static void runFile(const std::string& filename) {
         std::ifstream file(filename);
-        if (!file.is_open())
-        {
+        if (!file.is_open()) {
             std::cerr << "Error: Could not open file " << filename << std::endl;
             std::exit(65);
         }
@@ -27,19 +23,15 @@ public:
         file.close();
     }
 
-    static void runPrompt()
-    {
-        while (true)
-        {
+    static void runPrompt() {
+        while (true) {
             std::cout << ">> ";
             std::string line;
-            if (!std::getline(std::cin, line))
-            {
+            if (!std::getline(std::cin, line)) {
                 break;
             }
 
-            if (line.empty() || line == "exit")
-            {
+            if (line.empty() || line == "exit") {
                 std::cout << "\nExiting!" << std::endl;
                 break;
             }
@@ -48,8 +40,7 @@ public:
         }
     }
 
-    static void run(std::string source)
-    {
+    static void run(const std::string& source) {
         Lexer lexer(source);
         std::vector<Token> tokens = lexer.lex();
 
@@ -57,28 +48,14 @@ public:
         std::vector<std::unique_ptr<Stmt>> statements = parser.parse();
 
         Interpreter interpreter;
-        // Execute each statement
-        for (auto &stmt : statements)
-        {
-            interpreter.interpret(stmt);
-        }
+        interpreter.interpret(statements);
     }
-    
 };
 
-int main(int argc, char *argv[])
-{
-    if (argc < 2)
-    {
-        std::cerr << "Usage : " << argv[0] << " <filename>" << std::endl;
-        return 1;
-    }
-    else if (argc == 2)
-    {
+int main(int argc, char* argv[]) {
+    if (argc == 2) {
         AxScript::runFile(argv[1]);
-    }
-    else
-    {
+    } else {
         AxScript::runPrompt();
     }
     return 0;

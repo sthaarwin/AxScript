@@ -113,4 +113,34 @@ class InputStmt : public Stmt
         }
 };
 
+class IfStmt : public Stmt
+{
+    public:
+        std::unique_ptr<Expr>condition;
+        std::unique_ptr<Stmt> thenBranch;
+        std::unique_ptr<Stmt> elseBranch;
+        IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch, std::unique_ptr<Stmt> elseBranch = nullptr)
+        : condition(std::move(condition)), thenBranch(std::move(thenBranch)), elseBranch(std::move(elseBranch)) {}
+
+        void accept(Visitor *visitor) override
+        {
+            visitor->visit(this);
+        }
+};
+
+class ElseIfStmt : public Stmt
+{
+    public:
+        std::unique_ptr<Expr> condition;
+        std::unique_ptr<Stmt> thenBranch;
+        std::unique_ptr<Stmt> elseBranch;
+        ElseIfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch, std::unique_ptr<Stmt> elseBranch = nullptr)
+        : condition(std::move(condition)), thenBranch(std::move(thenBranch)), elseBranch(std::move(elseBranch)) {}
+
+        void accept(Visitor *visitor) override
+        {
+            visitor->visit(this);
+        }
+};
+
 #endif // AST_H

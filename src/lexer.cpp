@@ -12,6 +12,8 @@ Lexer::Lexer(const std::string source): source(source), current(0), line(1) {
     keywords["for"] = TokenType::FOR;
     keywords["fun"] = TokenType::FUN;
     keywords["if"] = TokenType::IF;
+    keywords["elif"] = TokenType::ELIF;
+    keywords["else"] = TokenType::ELSE;
     keywords["nil"] = TokenType::NIL;
     keywords["or"] = TokenType::OR;
     keywords["print"] = TokenType::PRINT;
