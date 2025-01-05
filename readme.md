@@ -9,6 +9,7 @@ Current features include:
 - Basic arithmetic operations (+, -, *, /)
 - Print statements
 - Number and string literals
+- User input
 - Error handling and recovery
 - REPL (Read-Eval-Print Loop) interface
 
