@@ -47,7 +47,7 @@ print result;
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/axscript.git
+git clone https://github.com/sthaarwin/axscript.git
 cd axscript
 ```
 
@@ -72,14 +72,13 @@ make
 
 ### Running a Script File
 ```bash
-./axscript path/to/your/script.ax
+./axscript script.axp
 ```
 
 ### Interactive Mode (REPL)
 ```bash
-./axscript
->> var x = 42;
->> print x;
+./axscript i m
+>> print "hello world!";
 42
 ```
 
@@ -128,9 +127,6 @@ The interpreter provides error messages for:
 - [ ] Better error messages
 - [ ] Code optimization
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
 
