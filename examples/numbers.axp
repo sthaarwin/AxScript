@@ -1,4 +1,4 @@
-var num = 1;
+var num = 4;
 print(num);
-var num2 = num + 1;
-print(num2);
+var num2 = num+2;
+print(num2 * 2);
