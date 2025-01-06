@@ -84,7 +84,7 @@ make all
 
 ### Interactive Mode (REPL)
 ```bash
-./axscript i m
+./axscript
 >> print "hello world!";
 hello world!
 ```

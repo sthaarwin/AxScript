@@ -11,6 +11,12 @@
 
 class AxScript {
 public:
+
+    static void Guide() {
+        std::cout << "AxScript v1.0.0" << std::endl;
+        std::cout << "Usage: axscript [filename]" << std::endl;
+    }
+
     static void runFile(const std::string& filename) {
         std::ifstream file(filename);
         if (!file.is_open()) {
@@ -24,6 +30,7 @@ public:
     }
 
     static void runPrompt() {
+        std::cout <<"Entering interactive shell mode"<<std::endl;
         while (true) {
             std::cout << ">> ";
             std::string line;
@@ -56,6 +63,7 @@ int main(int argc, char* argv[]) {
     if (argc == 2) {
         AxScript::runFile(argv[1]);
     } else {
+        AxScript::Guide();
         AxScript::runPrompt();
     }
     return 0;
