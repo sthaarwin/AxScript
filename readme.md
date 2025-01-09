@@ -10,6 +10,7 @@ Current features include:
 - Print statements
 - Number and string literals
 - User input
+- Control flow
 - Error handling and recovery
 - REPL (Read-Eval-Print Loop) interface
 
