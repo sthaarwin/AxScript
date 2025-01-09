@@ -27,6 +27,22 @@ print "Enter a number : ";
 input num;
 print num;
 ```
+```
+var num = 7;
+
+if (num > 5) {
+    var num2 = 2;
+    print num2;
+    print "num is greater than 5";
+} 
+else if (num < 5) {
+    print "num is less than 5";
+} 
+else {
+    print "num is equal to 5";
+}
+print "end";
+```
 
 ## Project Structure
 
@@ -105,6 +121,22 @@ print expression;
 ```
 input variableName;
 ```
+
+### If Statement
+```
+if(condition){}
+```
+
+### Else-If Statement
+```
+else if(condition){}
+```
+
+### Else Statement
+```
+else(condition){}
+```
+
 
 ### Expressions
 - Arithmetic: `+`, `-`, `*`, `/`

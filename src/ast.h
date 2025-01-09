@@ -104,43 +104,55 @@ public:
 
 class InputStmt : public Stmt
 {
-    public:
-        Token variableName;
-        InputStmt(Token variablename):variableName(variablename){}
-        void accept(Visitor *visitor) override
-        {
-            visitor->visit(this);
-        }
+public:
+    Token variableName;
+    InputStmt(Token variablename) : variableName(variablename) {}
+    void accept(Visitor *visitor) override
+    {
+        visitor->visit(this);
+    }
 };
 
 class IfStmt : public Stmt
 {
-    public:
-        std::unique_ptr<Expr>condition;
-        std::unique_ptr<Stmt> thenBranch;
-        std::unique_ptr<Stmt> elseBranch;
-        IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch, std::unique_ptr<Stmt> elseBranch = nullptr)
+public:
+    std::unique_ptr<Expr> condition;
+    std::unique_ptr<Stmt> thenBranch;
+    std::unique_ptr<Stmt> elseBranch;
+    IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch, std::unique_ptr<Stmt> elseBranch = nullptr)
         : condition(std::move(condition)), thenBranch(std::move(thenBranch)), elseBranch(std::move(elseBranch)) {}
 
-        void accept(Visitor *visitor) override
-        {
-            visitor->visit(this);
-        }
+    void accept(Visitor *visitor) override
+    {
+        visitor->visit(this);
+    }
 };
 
 class ElseIfStmt : public Stmt
 {
-    public:
-        std::unique_ptr<Expr> condition;
-        std::unique_ptr<Stmt> thenBranch;
-        std::unique_ptr<Stmt> elseBranch;
-        ElseIfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch, std::unique_ptr<Stmt> elseBranch = nullptr)
+public:
+    std::unique_ptr<Expr> condition;
+    std::unique_ptr<Stmt> thenBranch;
+    std::unique_ptr<Stmt> elseBranch;
+    ElseIfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch, std::unique_ptr<Stmt> elseBranch = nullptr)
         : condition(std::move(condition)), thenBranch(std::move(thenBranch)), elseBranch(std::move(elseBranch)) {}
 
-        void accept(Visitor *visitor) override
-        {
-            visitor->visit(this);
-        }
+    void accept(Visitor *visitor) override
+    {
+        visitor->visit(this);
+    }
+};
+
+class BlockStmt : public Stmt {
+public:
+    std::vector<std::unique_ptr<Stmt>> statements;
+    
+    BlockStmt(std::vector<std::unique_ptr<Stmt>>&& stmts) 
+        : statements(std::move(stmts)) {}
+        
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
 };
 
 #endif // AST_H
