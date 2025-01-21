@@ -1,0 +1,6 @@
+loop i = 1 to 5 {
+    print i;
+    if (i == 3) {
+        break;
+    }
+}

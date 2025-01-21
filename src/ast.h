@@ -155,4 +155,39 @@ public:
     }
 };
 
+class LoopStmt : public Stmt {
+public:
+    Token var;
+    std::unique_ptr<Expr> from;
+    std::unique_ptr<Expr> to;
+    std::unique_ptr<Expr> step;  // Optional step value
+    std::unique_ptr<Stmt> body;
+    bool isDownward;  // Indicates if it's counting down
+
+    LoopStmt(Token var, std::unique_ptr<Expr> from, std::unique_ptr<Expr> to, 
+             std::unique_ptr<Expr> step, std::unique_ptr<Stmt> body, bool isDownward)
+        : var(var), from(std::move(from)), to(std::move(to)), 
+          step(std::move(step)), body(std::move(body)), isDownward(isDownward) {}
+
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class BreakStmt : public Stmt {
+public:
+    BreakStmt() = default;
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class ContinueStmt : public Stmt {
+public:
+    ContinueStmt() = default;
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
 #endif // AST_H

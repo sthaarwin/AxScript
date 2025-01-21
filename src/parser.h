@@ -61,6 +61,22 @@ private:
         {
             return InputStatement();
         }
+        if (match({TokenType::LOOP}))
+        {
+            return loopStatement();
+        }
+
+        if (match({TokenType::BREAK}))
+        {
+            consume(TokenType::SEMICOLON, "Expect ';' after 'break'.");
+            return std::make_unique<BreakStmt>();
+        }
+        if (match({TokenType::CONTINUE}))
+        {
+            consume(TokenType::SEMICOLON, "Expect ';' after 'continue'.");
+            return std::make_unique<ContinueStmt>();
+        }
+
         if (match({TokenType::LEFT_BRACE}))
         {
             std::vector<std::unique_ptr<Stmt>> statements;
@@ -252,6 +268,43 @@ private:
             return expr;
         }
         throw std::runtime_error("Expect expression.");
+    }
+
+    std::unique_ptr<Stmt> loopStatement()
+    {
+        Token var = consume(TokenType::IDENTIFIER, "Expect variable name after 'loop'.");
+        consume(TokenType::EQUAL, "Expect '=' after variable name.");
+
+        auto from = expression();
+        consume(TokenType::TO, "Expect 'to' after start value.");
+        auto to = expression();
+
+        bool isDownward = match({TokenType::DOWN});
+
+        std::unique_ptr<Expr> step = nullptr;
+        if (match({TokenType::STEP}))
+        {
+            step = expression();
+        }
+
+        std::unique_ptr<Stmt> body;
+        if (match({TokenType::LEFT_BRACE}))
+        {
+            std::vector<std::unique_ptr<Stmt>> statements;
+            while (!check(TokenType::RIGHT_BRACE) && !isAtEnd())
+            {
+                statements.push_back(declaration());
+            }
+            consume(TokenType::RIGHT_BRACE, "Expect '}' after loop body.");
+            body = std::make_unique<BlockStmt>(std::move(statements));
+        }
+        else
+        {
+            body = statement();
+        }
+
+        return std::make_unique<LoopStmt>(var, std::move(from), std::move(to),
+                                          std::move(step), std::move(body), isDownward);
     }
 
     bool match(const std::vector<TokenType> &types)

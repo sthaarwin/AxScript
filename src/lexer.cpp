@@ -23,6 +23,12 @@ Lexer::Lexer(const std::string source): source(source), current(0), line(1) {
     keywords["this"] = TokenType::THIS;
     keywords["true"] = TokenType::TRUE;
     keywords["var"] = TokenType::VAR;
+    keywords["loop"] = TokenType::LOOP;
+    keywords["to"] = TokenType::TO;
+    keywords["step"] = TokenType::STEP;
+    keywords["break"] = TokenType::BREAK;
+    keywords["continue"] = TokenType::CONTINUE;
+    keywords["down"] = TokenType::DOWN;
     keywords["while"] = TokenType::WHILE;
 }
 

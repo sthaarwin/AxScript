@@ -11,6 +11,9 @@ class InputStmt;
 class IfStmt;
 class ElseIfStmt;
 class BlockStmt;
+class LoopStmt;  
+class BreakStmt;
+class ContinueStmt;
 
 class Visitor {
 public:
@@ -24,6 +27,9 @@ public:
     virtual void visit(IfStmt* stmt) = 0;
     virtual void visit(ElseIfStmt* stmt) = 0;
     virtual void visit(BlockStmt* stmt) = 0;
+    virtual void visit(LoopStmt* stmt) = 0; 
+    virtual void visit(BreakStmt* stmt) = 0;  
+    virtual void visit(ContinueStmt* stmt) = 0; 
 };
 
 #endif // VISITOR_H

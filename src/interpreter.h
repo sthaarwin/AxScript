@@ -13,6 +13,8 @@ class Interpreter : public Visitor
 private:
     std::variant<double, std::string> result;
     Environment environment;
+    bool breakEncountered = false;
+    bool continueEncountered = false;
 
 public:
     void visit(NumberExpr *expr) override
@@ -146,13 +148,117 @@ public:
             statement->accept(this);
         }
     }
+
+    void visit(LoopStmt *stmt) override
+    {
+        if (!stmt)
+        {
+            return;
+        }
+
+        try
+        {
+            // Initialize loop variable
+            if (stmt->from)
+            {
+                stmt->from->accept(this);
+                double fromValue = std::get<double>(result);
+                environment.define(stmt->var.lexeme, fromValue);
+            }
+
+            // Get end value
+            if (!stmt->to)
+            {
+                return; // Safety check
+            }
+            stmt->to->accept(this);
+            double toValue = std::get<double>(result);
+
+            // Get step value
+            double stepValue = 1.0;
+            if (stmt->step)
+            {
+                stmt->step->accept(this);
+                stepValue = std::get<double>(result);
+                if (stepValue == 0)
+                {
+                    throw std::runtime_error("Step value cannot be zero");
+                }
+            }
+
+            if (stmt->isDownward)
+            {
+                stepValue = -std::abs(stepValue);
+            }
+
+            while (true)
+            {
+                // Check termination condition
+                double currentValue = std::get<double>(environment.get(stmt->var.lexeme));
+                if (stmt->isDownward)
+                {
+                    if (currentValue < toValue)
+                        break;
+                }
+                else
+                {
+                    if (currentValue > toValue)
+                        break;
+                }
+
+                // Execute loop body
+                if (stmt->body)
+                {
+                    stmt->body->accept(this);
+                }
+
+                // Handle break
+                if (breakEncountered)
+                {
+                    breakEncountered = false;
+                    break;
+                }
+
+                // Handle continue
+                if (continueEncountered)
+                {
+                    continueEncountered = false;
+                }
+
+                // Update loop variable
+                environment.define(stmt->var.lexeme, currentValue + stepValue);
+            }
+        }
+        catch (const std::exception &e)
+        {
+            // Handle any errors that occur during loop execution
+            std::cerr << "Loop error: " << e.what() << std::endl;
+        }
+    }
+
+    void visit(BreakStmt *stmt) override
+    {
+        breakEncountered = true;
+    }
+
+    void visit(ContinueStmt *stmt) override
+    {
+        continueEncountered = true;
+    }
+
     void interpret(const std::vector<std::unique_ptr<Stmt>> &statements)
     {
         try
         {
+            breakEncountered = false;
+            continueEncountered = false;
             for (const auto &stmt : statements)
             {
-                execute(stmt);
+                if (stmt)
+                {
+                    execute(stmt);
+                    continueEncountered = false;
+                }
             }
         }
         catch (const std::runtime_error &error)
@@ -164,7 +270,10 @@ public:
 private:
     void execute(const std::unique_ptr<Stmt> &stmt)
     {
-        stmt->accept(this);
+        if (stmt)
+        {
+            stmt->accept(this);
+        }
     }
 };
 
