@@ -86,18 +86,12 @@ git clone https://github.com/sthaarwin/axscript.git
 cd axscript
 ```
 
-2. Create a build directory:
-```bash
-mkdir build
-cd build
-```
-
-3. Generate build files and compile:
+2. Generate build files and compile:
 ```bash
 make all
 ```
 
-4. Run the executable:
+3. Run the executable:
 ```bash
 ./src/output/axscript
 ```
