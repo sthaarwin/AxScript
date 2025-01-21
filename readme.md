@@ -50,6 +50,11 @@ loop i = 1 to 5 {
     print i;
 }
 ```
+```
+loop i = 5 to 1 down {
+    print i;
+}
+```
 ## Project Structure
 
 ```
@@ -143,17 +148,23 @@ else if(condition){}
 else(condition){}
 ```
 
-### Loop Statement
+### Loop(increment) Statement
 ```
 loop var=initial-value to max-range{}
 ```
+
+### Loop(decrement) Statement
+```
+loop var=initial-value to min-range down{}
+```
+
 
 ### Expressions
 - Arithmetic: `+`, `-`, `*`, `/`
 - Numbers: Integer or floating-point
 - Strings: In double quotes
 - Variables: Reference by name
-- Loop: `loop i = 1 to 5 {}`
+- Loop: `loop i = 1 to 5 {}`, `loop i = 5 to 1 down {}`
 
 ## Error Handling
 
