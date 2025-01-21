@@ -11,6 +11,7 @@ Current features include:
 - Number and string literals
 - User input
 - Control flow
+- Loops
 - Error handling and recovery
 - REPL (Read-Eval-Print Loop) interface
 
@@ -44,7 +45,11 @@ else {
 }
 print "end";
 ```
-
+```
+loop i = 1 to 5 {
+    print i;
+}
+```
 ## Project Structure
 
 ```
@@ -89,7 +94,7 @@ make all
 
 4. Run the executable:
 ```bash
-./axscript
+./src/output/axscript
 ```
 
 ## Usage
@@ -138,12 +143,17 @@ else if(condition){}
 else(condition){}
 ```
 
+### Loop Statement
+```
+loop var=initial-value to max-range{}
+```
 
 ### Expressions
 - Arithmetic: `+`, `-`, `*`, `/`
 - Numbers: Integer or floating-point
 - Strings: In double quotes
 - Variables: Reference by name
+- Loop: `loop i = 1 to 5 {}`
 
 ## Error Handling
 
@@ -165,7 +175,7 @@ The interpreter provides error messages for:
 ## Future Improvements
 
 - [x] Control flow (if/else/elseif statements)
-- [ ] Loops (while, for)
+- [x] Loops
 - [ ] Functions
 - [ ] More data types (boolean, arrays)
 - [ ] Standard library
