@@ -29,7 +29,14 @@ public:
 
     void visit(VariableExpr *expr) override
     {
-        result = environment.get(expr->name.lexeme);
+        if (environment.isDefined(expr->name.lexeme))
+        {
+            result = environment.get(expr->name.lexeme);
+        }
+        else
+        {
+            throw std::runtime_error("Undefined variable '" + expr->name.lexeme + "'");
+        }
     }
 
     void visit(BinaryExpr *expr) override
@@ -194,6 +201,10 @@ public:
             while (true)
             {
                 // Check termination condition
+                if (!environment.isDefined(stmt->var.lexeme))
+                {
+                    throw std::runtime_error("Undefined loop variable '" + stmt->var.lexeme + "'");
+                }
                 double currentValue = std::get<double>(environment.get(stmt->var.lexeme));
                 if (stmt->isDownward)
                 {
@@ -223,6 +234,7 @@ public:
                 if (continueEncountered)
                 {
                     continueEncountered = false;
+                    continue; // Skip to the next iteration
                 }
 
                 // Update loop variable
@@ -244,6 +256,11 @@ public:
     void visit(ContinueStmt *stmt) override
     {
         continueEncountered = true;
+    }
+
+    void visit(ExpressionStmt *stmt) override
+    {
+        stmt->expression->accept(this);
     }
 
     void interpret(const std::vector<std::unique_ptr<Stmt>> &statements)

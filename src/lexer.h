@@ -24,7 +24,13 @@ private:
 
     int line;
 
-    std::unordered_map<std::string, TokenType> keywords;
+    std::unordered_map<std::string, TokenType> keywords = {
+        {"break", TokenType::BREAK},
+        {"continue", TokenType::CONTINUE},
+        {"down", TokenType::DOWN},
+        {"to", TokenType::TO},
+        {"step", TokenType::STEP}
+    };
 
     std::vector<Token> tokens;
 

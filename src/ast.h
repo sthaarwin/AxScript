@@ -190,4 +190,17 @@ public:
     }
 };
 
+class ExpressionStmt : public Stmt
+{
+public:
+    std::unique_ptr<Expr> expression;
+
+    ExpressionStmt(std::unique_ptr<Expr> expression) : expression(std::move(expression)) {}
+
+    void accept(Visitor *visitor) override
+    {
+        visitor->visit(this);
+    }
+};
+
 #endif // AST_H

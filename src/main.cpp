@@ -30,7 +30,6 @@ public:
     }
 
     static void runPrompt() {
-        std::cout <<"Entering interactive shell mode"<<std::endl;
         while (true) {
             std::cout << ">> ";
             std::string line;
@@ -48,14 +47,18 @@ public:
     }
 
     static void run(const std::string& source) {
-        Lexer lexer(source);
-        std::vector<Token> tokens = lexer.lex();
+        try {
+            Lexer lexer(source);
+            std::vector<Token> tokens = lexer.lex();
 
-        Parser parser(tokens);
-        std::vector<std::unique_ptr<Stmt>> statements = parser.parse();
+            Parser parser(tokens);
+            std::vector<std::unique_ptr<Stmt>> statements = parser.parse();
 
-        Interpreter interpreter;
-        interpreter.interpret(statements);
+            Interpreter interpreter;
+            interpreter.interpret(statements);
+        } catch (const std::exception& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+        }
     }
 };
 

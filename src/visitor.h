@@ -14,6 +14,7 @@ class BlockStmt;
 class LoopStmt;  
 class BreakStmt;
 class ContinueStmt;
+class ExpressionStmt;
 
 class Visitor {
 public:
@@ -30,6 +31,7 @@ public:
     virtual void visit(LoopStmt* stmt) = 0; 
     virtual void visit(BreakStmt* stmt) = 0;  
     virtual void visit(ContinueStmt* stmt) = 0; 
+    virtual void visit(ExpressionStmt* stmt) = 0;
 };
 
 #endif // VISITOR_H

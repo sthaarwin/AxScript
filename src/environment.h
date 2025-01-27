@@ -22,6 +22,10 @@ class Environment{
             }
             throw std::runtime_error("Undefined variable '" + name + "'");
         }       
+
+        bool isDefined(const std::string& name) const {
+            return values.find(name) != values.end();
+        }
 };
 
 #endif //ENVIRONMENT_H

@@ -43,6 +43,11 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::TRUE: return "TRUE";
         case TokenType::VAR: return "VAR";
         case TokenType::WHILE: return "WHILE";
+        case TokenType::BREAK: return "BREAK";
+        case TokenType::CONTINUE: return "CONTINUE";
+        case TokenType::DOWN: return "DOWN";
+        case TokenType::TO: return "TO";
+        case TokenType::STEP: return "STEP";
         case TokenType::EOF_TOKEN: return "EOF_TOKEN";
         default: return "UNKNOWN";
     }

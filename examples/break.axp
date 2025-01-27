@@ -1,6 +1,8 @@
+print "Entering loop";
 loop i = 1 to 5 {
-    print i;
-    if (i == 3) {
+    if (i >= 2) {
+        print "Breaking loop";
         break;
     }
 }
+print "Exiting loop";

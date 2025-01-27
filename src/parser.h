@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
+#include <iostream>
 
 class Parser
 {
@@ -87,7 +88,15 @@ private:
             consume(TokenType::RIGHT_BRACE, "Expect '}' after block.");
             return std::make_unique<BlockStmt>(std::move(statements));
         }
-        return declaration();
+
+        return expressionStatement();
+    }
+
+    std::unique_ptr<Stmt> expressionStatement()
+    {
+        auto expr = expression();
+        consume(TokenType::SEMICOLON, "Expect ';' after expression.");
+        return std::make_unique<ExpressionStmt>(std::move(expr));
     }
 
     std::unique_ptr<Stmt> ifStatement()
