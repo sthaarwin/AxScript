@@ -105,6 +105,7 @@ private:
         auto condition = expression();
         consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
 
+        // Parse the 'then' branch
         std::vector<std::unique_ptr<Stmt>> thenStatements;
         if (match({TokenType::LEFT_BRACE}))
         {
@@ -120,15 +121,50 @@ private:
         }
         auto thenBranch = std::make_unique<BlockStmt>(std::move(thenStatements));
 
+        // Handle else-if and else chains
         std::unique_ptr<Stmt> elseBranch = nullptr;
         if (match({TokenType::ELSE}))
         {
             if (match({TokenType::IF}))
-            {
-                elseBranch = ifStatement();
+            { // Handle "else if"
+                // Parse the else-if condition
+                consume(TokenType::LEFT_PAREN, "Expect '(' after 'else if'.");
+                auto elseIfCondition = expression();
+                consume(TokenType::RIGHT_PAREN, "Expect ')' after else if condition.");
+
+                // Parse the else-if body
+                std::vector<std::unique_ptr<Stmt>> elseIfStatements;
+                if (match({TokenType::LEFT_BRACE}))
+                {
+                    while (!check(TokenType::RIGHT_BRACE) && !isAtEnd())
+                    {
+                        elseIfStatements.push_back(declaration());
+                    }
+                    consume(TokenType::RIGHT_BRACE, "Expect '}' after else if block.");
+                }
+                else
+                {
+                    elseIfStatements.push_back(statement());
+                }
+                auto elseIfBlock = std::make_unique<BlockStmt>(std::move(elseIfStatements));
+
+                // Recursively handle additional else-if or else
+                std::unique_ptr<Stmt> nextBranch = nullptr;
+                if (peek().type == TokenType::ELSE)
+                {
+                    advance(); // Consume the ELSE token
+                    nextBranch = ifStatement();
+                }
+
+                // Create the else-if branch
+                elseBranch = std::make_unique<IfStmt>(
+                    std::move(elseIfCondition),
+                    std::move(elseIfBlock),
+                    std::move(nextBranch));
             }
             else
             {
+                // Handle plain else
                 std::vector<std::unique_ptr<Stmt>> elseStatements;
                 if (match({TokenType::LEFT_BRACE}))
                 {
@@ -136,7 +172,7 @@ private:
                     {
                         elseStatements.push_back(declaration());
                     }
-                    consume(TokenType::RIGHT_BRACE, "Expect '}' after block.");
+                    consume(TokenType::RIGHT_BRACE, "Expect '}' after else block.");
                 }
                 else
                 {
@@ -146,24 +182,10 @@ private:
             }
         }
 
-        return std::make_unique<IfStmt>(std::move(condition), std::move(thenBranch), std::move(elseBranch));
-    }
-
-    std::unique_ptr<Stmt> elseIfStatement()
-    {
-        consume(TokenType::LEFT_PAREN, "Expect '(' after 'elseif'.");
-        auto condition = expression();
-        consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
-
-        auto thenBranch = statement();
-        std::unique_ptr<Stmt> elseBranch = nullptr;
-
-        if (match({TokenType::ELSE}))
-        {
-            elseBranch = statement();
-        }
-
-        return std::make_unique<ElseIfStmt>(std::move(condition), std::move(thenBranch), std::move(elseBranch));
+        return std::make_unique<IfStmt>(
+            std::move(condition),
+            std::move(thenBranch),
+            std::move(elseBranch));
     }
 
     std::unique_ptr<Stmt> printStatement()

@@ -5,23 +5,15 @@
 #include <iostream>
 
 Lexer::Lexer(const std::string source): source(source), current(0), line(1) {
-    keywords["and"] = TokenType::AND;
-    keywords["class"] = TokenType::CLASS;
+    keywords["if"] = TokenType::IF;
+    keywords["else if"] = TokenType::ELSEIF;
     keywords["else"] = TokenType::ELSE;
     keywords["false"] = TokenType::FALSE;
     keywords["for"] = TokenType::FOR;
-    keywords["fun"] = TokenType::FUN;
-    keywords["if"] = TokenType::IF;
-    keywords["elif"] = TokenType::ELIF;
-    keywords["else"] = TokenType::ELSE;
     keywords["nil"] = TokenType::NIL;
     keywords["or"] = TokenType::OR;
-    keywords["van"] = TokenType::PRINT;
+    keywords["print"] = TokenType::PRINT;
     keywords["input"] = TokenType::INPUT;
-    keywords["return"] = TokenType::RETURN;
-    keywords["super"] = TokenType::SUPER;
-    keywords["this"] = TokenType::THIS;
-    keywords["true"] = TokenType::TRUE;
     keywords["var"] = TokenType::VAR;
     keywords["loop"] = TokenType::LOOP;
     keywords["to"] = TokenType::TO;
@@ -29,7 +21,14 @@ Lexer::Lexer(const std::string source): source(source), current(0), line(1) {
     keywords["break"] = TokenType::BREAK;
     keywords["continue"] = TokenType::CONTINUE;
     keywords["down"] = TokenType::DOWN;
-    keywords["while"] = TokenType::WHILE;
+    // keywords["fun"] = TokenType::FUN;
+    // keywords["return"] = TokenType::RETURN;
+    // keywords["super"] = TokenType::SUPER;
+    // keywords["this"] = TokenType::THIS;
+    // keywords["true"] = TokenType::TRUE;
+    // keywords["while"] = TokenType::WHILE;
+    // keywords["and"] = TokenType::AND;
+    // keywords["class"] = TokenType::CLASS;
 }
 
 std::vector<Token> Lexer::lex() {

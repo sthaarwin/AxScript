@@ -1,11 +1,11 @@
-var num = 7;
+var num = 5;
 
 if (num > 5) {
     var num2 = 2;
     print num2;
     print "num is greater than 5";
 } 
-else if (num < 5) {
+else if (num == 5) {
     print "num is less than 5";
 } 
 else {
