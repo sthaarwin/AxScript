@@ -32,16 +32,20 @@ print num;
 ```
 var num = 7;
 
-if (num > 5) {
-    var num2 = 2;
-    print num2;
-    print "num is greater than 5";
-} 
-else if (num < 5) {
-    print "num is less than 5";
-} 
-else {
+compeq (num, 5) {
     print "num is equal to 5";
+}
+
+compneq (num, 5) {
+    print "num is not equal to 5";
+}
+
+compge (num, 5) {
+    print "num is greater than or equal to 5";
+}
+
+comple (num, 5) {
+    print "num is less than or equal to 5";
 }
 print "end";
 ```
@@ -127,19 +131,29 @@ print expression;
 input variableName;
 ```
 
-### If Statement
-```
-if(condition){}
-```
+### Comparison Statements
+- `compeq (left, right) { ... }`: Executes the block if `left` is equal to `right`.
+- `compneq (left, right) { ... }`: Executes the block if `left` is not equal to `right`.
+- `compge (left, right) { ... }`: Executes the block if `left` is greater than or equal to `right`.
+- `comple (left, right) { ... }`: Executes the block if `left` is less than or equal to `right`.
 
-### Else-If Statement
+Example:
 ```
-else if(condition){}
-```
+compeq (x, 10) {
+    print "x is 10";
+}
 
-### Else Statement
-```
-else(condition){}
+compneq (x, 10) {
+    print "x is not 10";
+}
+
+compge (x, 5) {
+    print "x is greater than or equal to 5";
+}
+
+comple (x, 15) {
+    print "x is less than or equal to 15";
+}
 ```
 
 ### Loop(increment) Statement
@@ -151,7 +165,6 @@ loop var=initial-value to max-range{}
 ```
 loop var=initial-value to min-range down{}
 ```
-
 
 ### Expressions
 - Arithmetic: `+`, `-`, `*`, `/`
@@ -179,7 +192,7 @@ The interpreter provides error messages for:
 
 ## Future Improvements
 
-- [x] Control flow (if/else/elseif statements)
+- [x] Control flow (comparison statements)
 - [x] Loops
 - [ ] Functions
 - [ ] More data types (boolean, arrays)

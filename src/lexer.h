@@ -29,7 +29,11 @@ private:
         {"continue", TokenType::CONTINUE},
         {"down", TokenType::DOWN},
         {"to", TokenType::TO},
-        {"step", TokenType::STEP}
+        {"step", TokenType::STEP},
+        {"compeq", TokenType::COMPEQ},
+        {"compneq", TokenType::COMPNEQ},
+        {"compge", TokenType::COMPGE},
+        {"comple", TokenType::COMPLE}
     };
 
     std::vector<Token> tokens;

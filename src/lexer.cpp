@@ -21,6 +21,10 @@ Lexer::Lexer(const std::string source): source(source), current(0), line(1) {
     keywords["break"] = TokenType::BREAK;
     keywords["continue"] = TokenType::CONTINUE;
     keywords["down"] = TokenType::DOWN;
+    keywords["compeq"] = TokenType::COMPEQ;
+    keywords["compneq"] = TokenType::COMPNEQ;
+    keywords["compge"] = TokenType::COMPGE;
+    keywords["comple"] = TokenType::COMPLE;
     // keywords["fun"] = TokenType::FUN;
     // keywords["return"] = TokenType::RETURN;
     // keywords["super"] = TokenType::SUPER;

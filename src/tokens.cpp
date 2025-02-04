@@ -48,6 +48,10 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::DOWN: return "DOWN";
         case TokenType::TO: return "TO";
         case TokenType::STEP: return "STEP";
+        case TokenType::COMPEQ: return "COMPEQ";
+        case TokenType::COMPNEQ: return "COMPNEQ";
+        case TokenType::COMPGE: return "COMPGE";
+        case TokenType::COMPLE: return "COMPLE";
         case TokenType::EOF_TOKEN: return "EOF_TOKEN";
         default: return "UNKNOWN";
     }

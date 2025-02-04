@@ -120,31 +120,43 @@ public:
         }
     }
 
-    void visit(IfStmt *stmt) override
-    {
-        stmt->condition->accept(this);
-        if (std::get<double>(result) != 0.0)
-        {
+    void visit(CompEqStmt *stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        stmt->right->accept(this);
+        auto rightValue = result;
+        if (std::get<double>(leftValue) == std::get<double>(rightValue)) {
             stmt->thenBranch->accept(this);
-        }
-        else if (stmt->elseBranch != nullptr)
-        {
-            stmt->elseBranch->accept(this);
         }
     }
 
-    void visit(ElseIfStmt *stmt) override
-    {
-        stmt->condition->accept(this);
-        bool conditionResult = std::get<double>(result) != 0.0;
-
-        if (conditionResult)
-        {
+    void visit(CompNeqStmt *stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        stmt->right->accept(this);
+        auto rightValue = result;
+        if (std::get<double>(leftValue) != std::get<double>(rightValue)) {
             stmt->thenBranch->accept(this);
         }
-        else if (stmt->elseBranch != nullptr)
-        {
-            stmt->elseBranch->accept(this);
+    }
+
+    void visit(CompGeStmt *stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        stmt->right->accept(this);
+        auto rightValue = result;
+        if (std::get<double>(leftValue) >= std::get<double>(rightValue)) {
+            stmt->thenBranch->accept(this);
+        }
+    }
+
+    void visit(CompLeStmt *stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        stmt->right->accept(this);
+        auto rightValue = result;
+        if (std::get<double>(leftValue) <= std::get<double>(rightValue)) {
+            stmt->thenBranch->accept(this);
         }
     }
 

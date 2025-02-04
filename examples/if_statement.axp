@@ -1,5 +1,15 @@
 var num = 3;
-var target = 5;
-if (num > target) print "greater";
-else if (num < target) print "less";
-else print "equal";
+compeq(num, 3){
+    print("num is 3");
+}
+compneq(num, 4){
+    print("num is not 4");
+}
+
+comple(num, 5){
+    print("num is less than 5");
+}
+
+compge(num, 2){
+    print("num is greater than or equal to 2");
+}

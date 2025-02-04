@@ -113,36 +113,6 @@ public:
     }
 };
 
-class IfStmt : public Stmt
-{
-public:
-    std::unique_ptr<Expr> condition;
-    std::unique_ptr<Stmt> thenBranch;
-    std::unique_ptr<Stmt> elseBranch;
-    IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch, std::unique_ptr<Stmt> elseBranch = nullptr)
-        : condition(std::move(condition)), thenBranch(std::move(thenBranch)), elseBranch(std::move(elseBranch)) {}
-
-    void accept(Visitor *visitor) override
-    {
-        visitor->visit(this);
-    }
-};
-
-class ElseIfStmt : public Stmt
-{
-public:
-    std::unique_ptr<Expr> condition;
-    std::unique_ptr<Stmt> thenBranch;
-    std::unique_ptr<Stmt> elseBranch;
-    ElseIfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch, std::unique_ptr<Stmt> elseBranch = nullptr)
-        : condition(std::move(condition)), thenBranch(std::move(thenBranch)), elseBranch(std::move(elseBranch)) {}
-
-    void accept(Visitor *visitor) override
-    {
-        visitor->visit(this);
-    }
-};
-
 class BlockStmt : public Stmt {
 public:
     std::vector<std::unique_ptr<Stmt>> statements;
@@ -199,6 +169,62 @@ public:
 
     void accept(Visitor *visitor) override
     {
+        visitor->visit(this);
+    }
+};
+
+class CompEqStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+    std::unique_ptr<Stmt> thenBranch;
+
+    CompEqStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
+        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class CompNeqStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+    std::unique_ptr<Stmt> thenBranch;
+
+    CompNeqStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
+        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class CompGeStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+    std::unique_ptr<Stmt> thenBranch;
+
+    CompGeStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
+        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class CompLeStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+    std::unique_ptr<Stmt> thenBranch;
+
+    CompLeStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
+        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+
+    void accept(Visitor *visitor) override {
         visitor->visit(this);
     }
 };
