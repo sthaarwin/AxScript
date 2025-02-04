@@ -1,7 +1,8 @@
 print "Entering loop";
 loop i = 1 to 5 {
-    if (i >= 2) {
-        print "Breaking loop";
+    print(i);
+    compeq(i, 3){
+        print("i is 3");
         break;
     }
 }

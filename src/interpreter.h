@@ -242,15 +242,15 @@ public:
                     break;
                 }
 
+                // Update loop variable before handling continue
+                environment.define(stmt->var.lexeme, currentValue + stepValue);
+
                 // Handle continue
                 if (continueEncountered)
                 {
                     continueEncountered = false;
                     continue; // Skip to the next iteration
                 }
-
-                // Update loop variable
-                environment.define(stmt->var.lexeme, currentValue + stepValue);
             }
         }
         catch (const std::exception &e)

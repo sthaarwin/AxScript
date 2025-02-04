@@ -1,4 +1,7 @@
 loop i = 1 to 5 {
-    if (i > 2) continue;
-    print "Continuing loop";
+    print(i);
+    compeq(i, 3){
+        print("continue at 3");
+        continue;
+    }
 }   
