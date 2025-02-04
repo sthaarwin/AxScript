@@ -33,7 +33,10 @@ private:
         {"compeq", TokenType::COMPEQ},
         {"compneq", TokenType::COMPNEQ},
         {"compge", TokenType::COMPGE},
-        {"comple", TokenType::COMPLE}
+        {"comple", TokenType::COMPLE},
+        {"and", TokenType::AND},
+        {"or", TokenType::OR},
+        {"not", TokenType::NOT}
     };
 
     std::vector<Token> tokens;

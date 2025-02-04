@@ -69,6 +69,19 @@ public:
     }
 };
 
+class CompEqExpr : public Expr {
+public:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+
+    CompEqExpr(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right)
+        : left(std::move(left)), right(std::move(right)) {}
+
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
 class Stmt
 {
 public:
@@ -223,6 +236,47 @@ public:
 
     CompLeStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
         : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class AndStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+    std::unique_ptr<Stmt> thenBranch;
+
+    AndStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
+        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class OrStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+    std::unique_ptr<Stmt> thenBranch;
+
+    OrStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
+        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class NotStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> operand;
+    std::unique_ptr<Stmt> thenBranch;
+
+    NotStmt(std::unique_ptr<Expr> operand, std::unique_ptr<Stmt> thenBranch)
+        : operand(std::move(operand)), thenBranch(std::move(thenBranch)) {}
 
     void accept(Visitor *visitor) override {
         visitor->visit(this);

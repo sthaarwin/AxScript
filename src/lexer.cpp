@@ -25,6 +25,9 @@ Lexer::Lexer(const std::string source): source(source), current(0), line(1) {
     keywords["compneq"] = TokenType::COMPNEQ;
     keywords["compge"] = TokenType::COMPGE;
     keywords["comple"] = TokenType::COMPLE;
+    keywords["and"] = TokenType::AND;
+    keywords["or"] = TokenType::OR;
+    keywords["not"] = TokenType::NOT;
     // keywords["fun"] = TokenType::FUN;
     // keywords["return"] = TokenType::RETURN;
     // keywords["super"] = TokenType::SUPER;

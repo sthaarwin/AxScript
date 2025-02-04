@@ -97,6 +97,15 @@ private:
         if (match({TokenType::COMPLE})) {
             return compLeStatement();
         }
+        if (match({TokenType::AND})) {
+            return andStatement();
+        }
+        if (match({TokenType::OR})) {
+            return orStatement();
+        }
+        if (match({TokenType::NOT})) {
+            return notStatement();
+        }
 
         return expressionStatement();
     }
@@ -148,6 +157,34 @@ private:
         return std::make_unique<CompLeStmt>(std::move(left), std::move(right), std::move(thenBranch));
     }
 
+    std::unique_ptr<Stmt> andStatement() {
+        consume(TokenType::LEFT_PAREN, "Expect '(' after 'and'.");
+        auto left = expression();
+        consume(TokenType::COMMA, "Expect ',' after left operand.");
+        auto right = expression();
+        consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+        auto thenBranch = statement();
+        return std::make_unique<AndStmt>(std::move(left), std::move(right), std::move(thenBranch));
+    }
+
+    std::unique_ptr<Stmt> orStatement() {
+        consume(TokenType::LEFT_PAREN, "Expect '(' after 'or'.");
+        auto left = expression();
+        consume(TokenType::COMMA, "Expect ',' after left operand.");
+        auto right = expression();
+        consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+        auto thenBranch = statement();
+        return std::make_unique<OrStmt>(std::move(left), std::move(right), std::move(thenBranch));
+    }
+
+    std::unique_ptr<Stmt> notStatement() {
+        consume(TokenType::LEFT_PAREN, "Expect '(' after 'not'.");
+        auto operand = expression();
+        consume(TokenType::RIGHT_PAREN, "Expect ')' after operand.");
+        auto thenBranch = statement();
+        return std::make_unique<NotStmt>(std::move(operand), std::move(thenBranch));
+    }
+
     std::unique_ptr<Stmt> printStatement()
     {
         auto value = expression();
@@ -190,6 +227,12 @@ private:
             Token op = previous();
             auto right = comparison();
             expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
+        }
+
+        if (match({TokenType::COMPEQ})) {
+            auto left = std::move(expr);
+            auto right = comparison();
+            expr = std::make_unique<CompEqExpr>(std::move(left), std::move(right));
         }
 
         return expr;

@@ -17,6 +17,10 @@ class CompEqStmt;
 class CompNeqStmt;
 class CompGeStmt;
 class CompLeStmt;
+class AndStmt;
+class OrStmt;
+class NotStmt;
+class CompEqExpr;
 
 class Visitor {
 public:
@@ -36,6 +40,10 @@ public:
     virtual void visit(CompNeqStmt* stmt) = 0;
     virtual void visit(CompGeStmt* stmt) = 0;
     virtual void visit(CompLeStmt* stmt) = 0;
+    virtual void visit(AndStmt* stmt) = 0;
+    virtual void visit(OrStmt* stmt) = 0;
+    virtual void visit(NotStmt* stmt) = 0;
+    virtual void visit(CompEqExpr* expr) = 0;
 };
 
 #endif // VISITOR_H

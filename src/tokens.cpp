@@ -36,6 +36,7 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::IF: return "IF";
         case TokenType::NIL: return "NIL";
         case TokenType::OR: return "OR";
+        case TokenType::NOT: return "NOT";
         case TokenType::PRINT: return "PRINT";
         case TokenType::RETURN: return "RETURN";
         case TokenType::SUPER: return "SUPER";

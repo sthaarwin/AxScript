@@ -160,6 +160,40 @@ public:
         }
     }
 
+    void visit(AndStmt *stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        if (std::get<double>(leftValue) != 0.0) {
+            stmt->right->accept(this);
+            auto rightValue = result;
+            if (std::get<double>(rightValue) != 0.0) {
+                stmt->thenBranch->accept(this);
+            }
+        }
+    }
+
+    void visit(OrStmt *stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        if (std::get<double>(leftValue) != 0.0) {
+            stmt->thenBranch->accept(this);
+        } else {
+            stmt->right->accept(this);
+            auto rightValue = result;
+            if (std::get<double>(rightValue) != 0.0) {
+                stmt->thenBranch->accept(this);
+            }
+        }
+    }
+
+    void visit(NotStmt *stmt) override {
+        stmt->operand->accept(this);
+        auto operandValue = result;
+        if (std::get<double>(operandValue) == 0.0) {
+            stmt->thenBranch->accept(this);
+        }
+    }
+
     void visit(BlockStmt *stmt) override
     {
         for (const auto &statement : stmt->statements)
@@ -273,6 +307,14 @@ public:
     void visit(ExpressionStmt *stmt) override
     {
         stmt->expression->accept(this);
+    }
+
+    void visit(CompEqExpr* expr) override {
+        expr->left->accept(this);
+        auto leftValue = result;
+        expr->right->accept(this);
+        auto rightValue = result;
+        result = static_cast<double>(std::get<double>(leftValue) == std::get<double>(rightValue));
     }
 
     void interpret(const std::vector<std::unique_ptr<Stmt>> &statements)
