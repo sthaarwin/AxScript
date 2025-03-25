@@ -93,8 +93,38 @@ public:
     void visit(PrintStmt *stmt) override
     {
         stmt->expression->accept(this);
-        std::visit([](auto &&arg)
-                   { std::cout << arg << std::endl; }, result);
+        std::visit([](auto &&arg) {
+            std::string output;
+            if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, std::string>) {
+                output = arg;
+            } else {
+                output = std::to_string(arg);
+            }
+            
+            // Process escape sequences
+            std::string processed;
+            for (size_t i = 0; i < output.length(); i++) {
+                if (output[i] == '\\' && i + 1 < output.length()) {
+                    switch (output[i + 1]) {
+                        case 'n':
+                            processed += '\n';
+                            i++;
+                            break;
+                        case 't':
+                            processed += '\t';
+                            i++;
+                            break;
+                        default:
+                            processed += output[i];
+                    }
+                } else {
+                    processed += output[i];
+                }
+            }
+            
+            // Print without adding a newline
+            std::cout << processed;
+        }, result);
     }
 
     void visit(VarStmt *stmt) override

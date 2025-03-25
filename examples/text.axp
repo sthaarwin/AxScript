@@ -1,4 +1,4 @@
 print "hello";
-print "world";
-print "the is new line";
-print "another line";
+print "\t world";
+print "\n the is new line";
+print "\n another line";
