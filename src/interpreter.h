@@ -142,17 +142,15 @@ public:
             isEqual = false;
         }
         
-        // Set the result for use in logical operations
         result = static_cast<double>(isEqual);
         
-        // If this is a standalone comparison (not part of AND/OR),
-        // execute the appropriate branch
-        if (stmt->thenBranch || stmt->elseBranch) {
-            if (isEqual && stmt->thenBranch) {
-                stmt->thenBranch->accept(this);
-            } else if (!isEqual && stmt->elseBranch) {
-                stmt->elseBranch->accept(this);
-            }
+        if (isEqual && stmt->thenBranch) {
+            stmt->thenBranch->accept(this);
+            return; // Return after executing then branch
+        } 
+        
+        if (!isEqual && stmt->elseBranch) {
+            stmt->elseBranch->accept(this);
         }
     }
 

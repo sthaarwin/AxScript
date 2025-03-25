@@ -155,8 +155,17 @@ private:
 
         auto thenBranch = statement();
         std::unique_ptr<Stmt> elseBranch = nullptr;
+        
+        // Handle else if and else
         if (match({TokenType::ELSE})) {
-            elseBranch = statement();
+            if (peek().type == TokenType::IF) {
+                advance(); // consume IF
+                if (match({TokenType::COMPEQ})) {
+                    elseBranch = compEqStatement();
+                }
+            } else {
+                elseBranch = statement();
+            }
         }
         
         return std::make_unique<CompEqStmt>(
@@ -173,8 +182,38 @@ private:
         consume(TokenType::COMMA, "Expect ',' after left operand.");
         auto right = expression();
         consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+        
         auto thenBranch = statement();
-        return std::make_unique<CompNeqStmt>(std::move(left), std::move(right), std::move(thenBranch));
+        std::vector<std::pair<std::unique_ptr<Expr>, std::unique_ptr<Stmt>>> elseIfBranches;
+        std::unique_ptr<Stmt> elseBranch = nullptr;
+        
+        while (match({TokenType::ELSE})) {
+            if (peek().type == TokenType::IF) {
+                advance(); // consume 'if'
+                if (match({TokenType::COMPEQ})) {
+                    consume(TokenType::LEFT_PAREN, "Expect '(' after 'compeq'.");
+                    auto elseIfLeft = expression();
+                    consume(TokenType::COMMA, "Expect ',' after left operand.");
+                    auto elseIfRight = expression();
+                    consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+                    auto elseIfBranch = statement();
+                    
+                    auto condition = std::make_unique<CompEqExpr>(std::move(elseIfLeft), std::move(elseIfRight));
+                    elseIfBranches.push_back(std::make_pair(std::move(condition), std::move(elseIfBranch)));
+                }
+            } else {
+                elseBranch = statement();
+                break;
+            }
+        }
+        
+        return std::make_unique<CompNeqStmt>(
+            std::move(left), 
+            std::move(right), 
+            std::move(thenBranch),
+            std::move(elseIfBranches),
+            std::move(elseBranch)
+        );
     }
 
     std::unique_ptr<Stmt> compGeStatement() {
@@ -183,8 +222,38 @@ private:
         consume(TokenType::COMMA, "Expect ',' after left operand.");
         auto right = expression();
         consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+        
         auto thenBranch = statement();
-        return std::make_unique<CompGeStmt>(std::move(left), std::move(right), std::move(thenBranch));
+        std::vector<std::pair<std::unique_ptr<Expr>, std::unique_ptr<Stmt>>> elseIfBranches;
+        std::unique_ptr<Stmt> elseBranch = nullptr;
+        
+        while (match({TokenType::ELSE})) {
+            if (peek().type == TokenType::IF) {
+                advance(); // consume 'if'
+                if (match({TokenType::COMPEQ})) {
+                    consume(TokenType::LEFT_PAREN, "Expect '(' after 'compeq'.");
+                    auto elseIfLeft = expression();
+                    consume(TokenType::COMMA, "Expect ',' after left operand.");
+                    auto elseIfRight = expression();
+                    consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+                    auto elseIfBranch = statement();
+                    
+                    auto condition = std::make_unique<CompEqExpr>(std::move(elseIfLeft), std::move(elseIfRight));
+                    elseIfBranches.push_back(std::make_pair(std::move(condition), std::move(elseIfBranch)));
+                }
+            } else {
+                elseBranch = statement();
+                break;
+            }
+        }
+        
+        return std::make_unique<CompGeStmt>(
+            std::move(left), 
+            std::move(right), 
+            std::move(thenBranch),
+            std::move(elseIfBranches),
+            std::move(elseBranch)
+        );
     }
 
     std::unique_ptr<Stmt> compLeStatement() {
@@ -193,36 +262,38 @@ private:
         consume(TokenType::COMMA, "Expect ',' after left operand.");
         auto right = expression();
         consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+        
         auto thenBranch = statement();
-        return std::make_unique<CompLeStmt>(std::move(left), std::move(right), std::move(thenBranch));
-    }
-
-    std::unique_ptr<Stmt> andStatement() {
-        consume(TokenType::LEFT_PAREN, "Expect '(' after 'and'.");
-        auto left = expression();
-        consume(TokenType::COMMA, "Expect ',' after left operand.");
-        auto right = expression();
-        consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
-        auto thenBranch = statement();
-        return std::make_unique<AndStmt>(std::move(left), std::move(right), std::move(thenBranch));
-    }
-
-    std::unique_ptr<Stmt> orStatement() {
-        consume(TokenType::LEFT_PAREN, "Expect '(' after 'or'.");
-        auto left = expression();
-        consume(TokenType::COMMA, "Expect ',' after left operand.");
-        auto right = expression();
-        consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
-        auto thenBranch = statement();
-        return std::make_unique<OrStmt>(std::move(left), std::move(right), std::move(thenBranch));
-    }
-
-    std::unique_ptr<Stmt> notStatement() {
-        consume(TokenType::LEFT_PAREN, "Expect '(' after 'not'.");
-        auto operand = expression();
-        consume(TokenType::RIGHT_PAREN, "Expect ')' after operand.");
-        auto thenBranch = statement();
-        return std::make_unique<NotStmt>(std::move(operand), std::move(thenBranch));
+        std::vector<std::pair<std::unique_ptr<Expr>, std::unique_ptr<Stmt>>> elseIfBranches;
+        std::unique_ptr<Stmt> elseBranch = nullptr;
+        
+        while (match({TokenType::ELSE})) {
+            if (peek().type == TokenType::IF) {
+                advance(); // consume 'if'
+                if (match({TokenType::COMPEQ})) {
+                    consume(TokenType::LEFT_PAREN, "Expect '(' after 'compeq'.");
+                    auto elseIfLeft = expression();
+                    consume(TokenType::COMMA, "Expect ',' after left operand.");
+                    auto elseIfRight = expression();
+                    consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+                    auto elseIfBranch = statement();
+                    
+                    auto condition = std::make_unique<CompEqExpr>(std::move(elseIfLeft), std::move(elseIfRight));
+                    elseIfBranches.push_back(std::make_pair(std::move(condition), std::move(elseIfBranch)));
+                }
+            } else {
+                elseBranch = statement();
+                break;
+            }
+        }
+        
+        return std::make_unique<CompLeStmt>(
+            std::move(left), 
+            std::move(right), 
+            std::move(thenBranch),
+            std::move(elseIfBranches),
+            std::move(elseBranch)
+        );
     }
 
     std::unique_ptr<Stmt> compGStatement() {
@@ -272,8 +343,38 @@ private:
         consume(TokenType::COMMA, "Expect ',' after left operand.");
         auto right = expression();
         consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+        
         auto thenBranch = statement();
-        return std::make_unique<CompLStmt>(std::move(left), std::move(right), std::move(thenBranch));
+        std::vector<std::pair<std::unique_ptr<Expr>, std::unique_ptr<Stmt>>> elseIfBranches;
+        std::unique_ptr<Stmt> elseBranch = nullptr;
+        
+        while (match({TokenType::ELSE})) {
+            if (peek().type == TokenType::IF) {
+                advance(); // consume 'if'
+                if (match({TokenType::COMPEQ})) {
+                    consume(TokenType::LEFT_PAREN, "Expect '(' after 'compeq'.");
+                    auto elseIfLeft = expression();
+                    consume(TokenType::COMMA, "Expect ',' after left operand.");
+                    auto elseIfRight = expression();
+                    consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+                    auto elseIfBranch = statement();
+                    
+                    auto condition = std::make_unique<CompEqExpr>(std::move(elseIfLeft), std::move(elseIfRight));
+                    elseIfBranches.push_back(std::make_pair(std::move(condition), std::move(elseIfBranch)));
+                }
+            } else {
+                elseBranch = statement();
+                break;
+            }
+        }
+        
+        return std::make_unique<CompLStmt>(
+            std::move(left), 
+            std::move(right), 
+            std::move(thenBranch),
+            std::move(elseIfBranches),
+            std::move(elseBranch)
+        );
     }
 
     std::unique_ptr<Stmt> printStatement()
