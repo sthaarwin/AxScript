@@ -1,0 +1,12 @@
+var num;
+print "Enter a number : ";
+input num;
+compg(num, 5){
+    print "num greater than 5";
+}
+else if compeq(num, 5){
+    print "num is equal to 5";
+}
+else{
+    print "num is less than 5";
+}

@@ -191,6 +191,7 @@ public:
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
     std::unique_ptr<Stmt> thenBranch;
+    std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches;
     std::unique_ptr<Stmt> elseBranch;
 
     CompEqStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, 
@@ -208,9 +209,17 @@ public:
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
     std::unique_ptr<Stmt> thenBranch;
+    std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches;
+    std::unique_ptr<Stmt> elseBranch;
 
-    CompNeqStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
-        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+    CompNeqStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, 
+                std::unique_ptr<Stmt> thenBranch,
+                std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches = {},
+                std::unique_ptr<Stmt> elseBranch = nullptr)
+        : left(std::move(left)), right(std::move(right)), 
+          thenBranch(std::move(thenBranch)),
+          elseIfBranches(std::move(elseIfBranches)),
+          elseBranch(std::move(elseBranch)) {}
 
     void accept(Visitor *visitor) override {
         visitor->visit(this);
@@ -222,9 +231,17 @@ public:
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
     std::unique_ptr<Stmt> thenBranch;
+    std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches;
+    std::unique_ptr<Stmt> elseBranch;
 
-    CompGeStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
-        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+    CompGeStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, 
+               std::unique_ptr<Stmt> thenBranch,
+               std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches = {},
+               std::unique_ptr<Stmt> elseBranch = nullptr)
+        : left(std::move(left)), right(std::move(right)), 
+          thenBranch(std::move(thenBranch)),
+          elseIfBranches(std::move(elseIfBranches)),
+          elseBranch(std::move(elseBranch)) {}
 
     void accept(Visitor *visitor) override {
         visitor->visit(this);
@@ -236,9 +253,17 @@ public:
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
     std::unique_ptr<Stmt> thenBranch;
+    std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches;
+    std::unique_ptr<Stmt> elseBranch;
 
-    CompLeStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
-        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+    CompLeStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, 
+               std::unique_ptr<Stmt> thenBranch,
+               std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches = {},
+               std::unique_ptr<Stmt> elseBranch = nullptr)
+        : left(std::move(left)), right(std::move(right)), 
+          thenBranch(std::move(thenBranch)),
+          elseIfBranches(std::move(elseIfBranches)),
+          elseBranch(std::move(elseBranch)) {}
 
     void accept(Visitor *visitor) override {
         visitor->visit(this);
@@ -250,9 +275,17 @@ public:
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
     std::unique_ptr<Stmt> thenBranch;
+    std::vector<std::pair<std::unique_ptr<Expr>, std::unique_ptr<Stmt>>> elseIfBranches;
+    std::unique_ptr<Stmt> elseBranch;
 
-    CompGStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
-        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+    CompGStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, 
+              std::unique_ptr<Stmt> thenBranch,
+              std::vector<std::pair<std::unique_ptr<Expr>, std::unique_ptr<Stmt>>> elseIfBranches = {},
+              std::unique_ptr<Stmt> elseBranch = nullptr)
+        : left(std::move(left)), right(std::move(right)), 
+          thenBranch(std::move(thenBranch)),
+          elseIfBranches(std::move(elseIfBranches)),
+          elseBranch(std::move(elseBranch)) {}
 
     void accept(Visitor *visitor) override {
         visitor->visit(this);
@@ -264,9 +297,17 @@ public:
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
     std::unique_ptr<Stmt> thenBranch;
+    std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches;
+    std::unique_ptr<Stmt> elseBranch;
 
-    CompLStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
-        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+    CompLStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, 
+              std::unique_ptr<Stmt> thenBranch,
+              std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches = {},
+              std::unique_ptr<Stmt> elseBranch = nullptr)
+        : left(std::move(left)), right(std::move(right)), 
+          thenBranch(std::move(thenBranch)),
+          elseIfBranches(std::move(elseIfBranches)),
+          elseBranch(std::move(elseBranch)) {}
 
     void accept(Visitor *visitor) override {
         visitor->visit(this);
@@ -278,9 +319,17 @@ public:
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
     std::unique_ptr<Stmt> thenBranch;
+    std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches;
+    std::unique_ptr<Stmt> elseBranch;
 
-    AndStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
-        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+    AndStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, 
+            std::unique_ptr<Stmt> thenBranch,
+            std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches = {},
+            std::unique_ptr<Stmt> elseBranch = nullptr)
+        : left(std::move(left)), right(std::move(right)), 
+          thenBranch(std::move(thenBranch)),
+          elseIfBranches(std::move(elseIfBranches)),
+          elseBranch(std::move(elseBranch)) {}
 
     void accept(Visitor *visitor) override {
         visitor->visit(this);
@@ -292,9 +341,17 @@ public:
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
     std::unique_ptr<Stmt> thenBranch;
+    std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches;
+    std::unique_ptr<Stmt> elseBranch;
 
-    OrStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
-        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+    OrStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, 
+           std::unique_ptr<Stmt> thenBranch,
+           std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches = {},
+           std::unique_ptr<Stmt> elseBranch = nullptr)
+        : left(std::move(left)), right(std::move(right)), 
+          thenBranch(std::move(thenBranch)),
+          elseIfBranches(std::move(elseIfBranches)),
+          elseBranch(std::move(elseBranch)) {}
 
     void accept(Visitor *visitor) override {
         visitor->visit(this);
@@ -305,9 +362,15 @@ class NotStmt : public Stmt {
 public:
     std::unique_ptr<Expr> operand;
     std::unique_ptr<Stmt> thenBranch;
+    std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches;
+    std::unique_ptr<Stmt> elseBranch;
 
-    NotStmt(std::unique_ptr<Expr> operand, std::unique_ptr<Stmt> thenBranch)
-        : operand(std::move(operand)), thenBranch(std::move(thenBranch)) {}
+    NotStmt(std::unique_ptr<Expr> operand, std::unique_ptr<Stmt> thenBranch,
+            std::vector<std::pair<std::unique_ptr<Stmt>, std::unique_ptr<Stmt>>> elseIfBranches = {},
+            std::unique_ptr<Stmt> elseBranch = nullptr)
+        : operand(std::move(operand)), thenBranch(std::move(thenBranch)),
+          elseIfBranches(std::move(elseIfBranches)),
+          elseBranch(std::move(elseBranch)) {}
 
     void accept(Visitor *visitor) override {
         visitor->visit(this);
@@ -318,7 +381,7 @@ class ConditionStmt : public Stmt {
 public:
     std::vector<std::unique_ptr<Stmt>> conditions;
     std::unique_ptr<Stmt> thenBranch;
-    std::unique_ptr<Stmt> elseBranch;  // Add else branch
+    std::unique_ptr<Stmt> elseBranch;
 
     ConditionStmt(std::vector<std::unique_ptr<Stmt>>&& conditions, 
                   std::unique_ptr<Stmt> thenBranch,

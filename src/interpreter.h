@@ -16,6 +16,13 @@ private:
     bool breakEncountered = false;
     bool continueEncountered = false;
 
+private:
+    void execute(const std::unique_ptr<Stmt>& stmt) {
+        if (stmt) {
+            stmt->accept(this);
+        }
+    }
+
 public:
     void visit(NumberExpr *expr) override
     {
@@ -121,17 +128,31 @@ public:
     }
 
     void visit(CompEqStmt *stmt) override {
+        if (!stmt) return;
+        
         stmt->left->accept(this);
         auto leftValue = result;
         stmt->right->accept(this);
         auto rightValue = result;
-        bool isEqual = std::get<double>(leftValue) == std::get<double>(rightValue);
+        
+        bool isEqual = false;
+        try {
+            isEqual = std::get<double>(leftValue) == std::get<double>(rightValue);
+        } catch (...) {
+            isEqual = false;
+        }
+        
+        // Set the result for use in logical operations
         result = static_cast<double>(isEqual);
         
-        if (isEqual) {
-            stmt->thenBranch->accept(this);
-        } else if (stmt->elseBranch) {
-            stmt->elseBranch->accept(this);
+        // If this is a standalone comparison (not part of AND/OR),
+        // execute the appropriate branch
+        if (stmt->thenBranch || stmt->elseBranch) {
+            if (isEqual && stmt->thenBranch) {
+                stmt->thenBranch->accept(this);
+            } else if (!isEqual && stmt->elseBranch) {
+                stmt->elseBranch->accept(this);
+            }
         }
     }
 
@@ -140,8 +161,14 @@ public:
         auto leftValue = result;
         stmt->right->accept(this);
         auto rightValue = result;
-        if (std::get<double>(leftValue) != std::get<double>(rightValue)) {
+        
+        bool isNotEqual = std::get<double>(leftValue) != std::get<double>(rightValue);
+        result = static_cast<double>(isNotEqual);
+        
+        if (isNotEqual && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
+        } else if (!isNotEqual && stmt->elseBranch) {
+            stmt->elseBranch->accept(this);
         }
     }
 
@@ -150,8 +177,14 @@ public:
         auto leftValue = result;
         stmt->right->accept(this);
         auto rightValue = result;
-        if (std::get<double>(leftValue) >= std::get<double>(rightValue)) {
+        
+        bool isGreaterEqual = std::get<double>(leftValue) >= std::get<double>(rightValue);
+        result = static_cast<double>(isGreaterEqual);
+        
+        if (isGreaterEqual && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
+        } else if (!isGreaterEqual && stmt->elseBranch) {
+            stmt->elseBranch->accept(this);
         }
     }
 
@@ -160,18 +193,49 @@ public:
         auto leftValue = result;
         stmt->right->accept(this);
         auto rightValue = result;
-        if (std::get<double>(leftValue) <= std::get<double>(rightValue)) {
+        
+        bool isLessEqual = std::get<double>(leftValue) <= std::get<double>(rightValue);
+        result = static_cast<double>(isLessEqual);
+        
+        if (isLessEqual && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
+        } else if (!isLessEqual && stmt->elseBranch) {
+            stmt->elseBranch->accept(this);
         }
     }
 
     void visit(CompGStmt *stmt) override {
+        if (!stmt) return;
+        
         stmt->left->accept(this);
         auto leftValue = result;
         stmt->right->accept(this);
         auto rightValue = result;
-        if (std::get<double>(leftValue) > std::get<double>(rightValue)) {
-            stmt->thenBranch->accept(this);
+        
+        bool isGreater = std::get<double>(leftValue) > std::get<double>(rightValue);
+        
+        if (isGreater) {
+            if (stmt->thenBranch) {
+                stmt->thenBranch->accept(this);
+            }
+            return;
+        }
+
+        // Try each else-if branch
+        for (const auto& elseIfPair : stmt->elseIfBranches) {
+            // Evaluate the condition expression
+            elseIfPair.first->accept(this);
+            bool condition = std::get<double>(result) != 0.0;
+            
+            if (condition) {
+                elseIfPair.second->accept(this);
+                return;  // Important: return after executing matching branch
+            }
+        }
+        
+        // If no conditions matched, execute else branch
+        if (stmt->elseBranch) {
+            stmt->elseBranch->accept(this);
         }
     }
 
@@ -180,8 +244,14 @@ public:
         auto leftValue = result;
         stmt->right->accept(this);
         auto rightValue = result;
-        if (std::get<double>(leftValue) < std::get<double>(rightValue)) {
+        
+        bool isLess = std::get<double>(leftValue) < std::get<double>(rightValue);
+        result = static_cast<double>(isLess);
+        
+        if (isLess && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
+        } else if (!isLess && stmt->elseBranch) {
+            stmt->elseBranch->accept(this);
         }
     }
 
@@ -343,47 +413,66 @@ public:
     }
 
     void visit(AndConditionStmt* stmt) override {
+        if (!stmt || stmt->conditions.empty()) return;
+        
         bool allTrue = true;
         for (const auto& condition : stmt->conditions) {
-            if (auto compEqStmt = dynamic_cast<CompEqStmt*>(condition.get())) {
-                compEqStmt->left->accept(this);
+            if (auto compEq = dynamic_cast<CompEqStmt*>(condition.get())) {
+                compEq->left->accept(this);
                 auto leftValue = result;
-                compEqStmt->right->accept(this);
+                compEq->right->accept(this);
                 auto rightValue = result;
                 
-                if (std::get<double>(leftValue) != std::get<double>(rightValue)) {
-                    if (stmt->elseBranch) {
-                        stmt->elseBranch->accept(this);
+                try {
+                    if (std::get<double>(leftValue) != std::get<double>(rightValue)) {
+                        allTrue = false;
+                        break;
                     }
-                    return;
-                }
-            }
-        }
-        
-        if (stmt->thenBranch) {
-            stmt->thenBranch->accept(this);
-        }
-    }
-
-    void visit(OrConditionStmt* stmt) override {
-        bool anyTrue = false;
-        for (const auto& condition : stmt->conditions) {
-            if (auto compEqStmt = dynamic_cast<CompEqStmt*>(condition.get())) {
-                compEqStmt->left->accept(this);
-                auto leftValue = result;
-                compEqStmt->right->accept(this);
-                auto rightValue = result;
-                
-                if (std::get<double>(leftValue) == std::get<double>(rightValue)) {
-                    anyTrue = true;
+                } catch (...) {
+                    allTrue = false;
                     break;
                 }
             }
         }
         
+        if (allTrue) {
+            if (stmt->thenBranch) {
+                stmt->thenBranch->accept(this);
+            }
+        } else {
+            if (stmt->elseBranch) {
+                stmt->elseBranch->accept(this);
+            }
+        }
+    }
+
+    void visit(OrConditionStmt* stmt) override {
+        if (!stmt) return;
+        
+        bool anyTrue = false;
+        for (const auto& condition : stmt->conditions) {
+            if (auto compEq = dynamic_cast<CompEqStmt*>(condition.get())) {
+                compEq->left->accept(this);
+                auto leftValue = result;
+                compEq->right->accept(this);
+                auto rightValue = result;
+                
+                try {
+                    if (std::get<double>(leftValue) == std::get<double>(rightValue)) {
+                        anyTrue = true;
+                        break;
+                    }
+                } catch (...) {
+                    continue;
+                }
+            }
+        }
+        
+        result = static_cast<double>(anyTrue);  // Store the overall result
+        
         if (anyTrue && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
-        } else if (stmt->elseBranch) {
+        } else if (!anyTrue && stmt->elseBranch) {
             stmt->elseBranch->accept(this);
         }
     }
@@ -406,15 +495,6 @@ public:
         catch (const std::runtime_error &error)
         {
             std::cerr << "Runtime error: " << error.what() << std::endl;
-        }
-    }
-
-private:
-    void execute(const std::unique_ptr<Stmt> &stmt)
-    {
-        if (stmt)
-        {
-            stmt->accept(this);
         }
     }
 };

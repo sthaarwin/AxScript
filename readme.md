@@ -142,7 +142,28 @@ input variableName;
 - `compg (left, right) { ... }`: Executes the block if `left` is greater than `right`.
 - `compl (left, right) { ... }`: Executes the block if `left` is less than `right`.
 
+Comparison statements can include else and else if branches:
+
 Example:
+```
+var num = 10;
+
+compg(num, 5) {
+    print "num is greater than 5";
+} else if compeq(num, 5) {
+    print "num is equal to 5";
+} else {
+    print "num is less than 5";
+}
+
+compeq(x, 10) {
+    print "x is equal to 10";
+} else {
+    print "x is not equal to 10";
+}
+```
+
+Basic comparison statement:
 ```
 compeq (x, 10) {
     print "x is 10";
