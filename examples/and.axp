@@ -1,6 +1,6 @@
 var a = 1;
 var b = 3;
-compeq(a, 1) and compeq(b, 3) {
+compeq(a, 2) and compeq(b, 3) {
     print("Both conditions are true");
 } else {
     print("AND condition failed");

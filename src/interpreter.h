@@ -155,49 +155,82 @@ public:
     }
 
     void visit(CompNeqStmt *stmt) override {
+        if (!stmt) return;
+        
         stmt->left->accept(this);
         auto leftValue = result;
         stmt->right->accept(this);
         auto rightValue = result;
         
-        bool isNotEqual = std::get<double>(leftValue) != std::get<double>(rightValue);
+        bool isNotEqual = false;
+        try {
+            isNotEqual = std::get<double>(leftValue) != std::get<double>(rightValue);
+        } catch (...) {
+            isNotEqual = false;
+        }
+        
         result = static_cast<double>(isNotEqual);
         
         if (isNotEqual && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
-        } else if (!isNotEqual && stmt->elseBranch) {
+            return; // Return after executing then branch
+        }
+        
+        if (!isNotEqual && stmt->elseBranch) {
             stmt->elseBranch->accept(this);
         }
     }
 
     void visit(CompGeStmt *stmt) override {
+        if (!stmt) return;
+        
         stmt->left->accept(this);
         auto leftValue = result;
         stmt->right->accept(this);
         auto rightValue = result;
         
-        bool isGreaterEqual = std::get<double>(leftValue) >= std::get<double>(rightValue);
+        bool isGreaterEqual = false;
+        try {
+            isGreaterEqual = std::get<double>(leftValue) >= std::get<double>(rightValue);
+        } catch (...) {
+            isGreaterEqual = false;
+        }
+        
         result = static_cast<double>(isGreaterEqual);
         
         if (isGreaterEqual && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
-        } else if (!isGreaterEqual && stmt->elseBranch) {
+            return; // Return after executing then branch
+        }
+        
+        if (!isGreaterEqual && stmt->elseBranch) {
             stmt->elseBranch->accept(this);
         }
     }
 
     void visit(CompLeStmt *stmt) override {
+        if (!stmt) return;
+        
         stmt->left->accept(this);
         auto leftValue = result;
         stmt->right->accept(this);
         auto rightValue = result;
         
-        bool isLessEqual = std::get<double>(leftValue) <= std::get<double>(rightValue);
+        bool isLessEqual = false;
+        try {
+            isLessEqual = std::get<double>(leftValue) <= std::get<double>(rightValue);
+        } catch (...) {
+            isLessEqual = false;
+        }
+        
         result = static_cast<double>(isLessEqual);
         
         if (isLessEqual && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
-        } else if (!isLessEqual && stmt->elseBranch) {
+            return; // Return after executing then branch
+        }
+        
+        if (!isLessEqual && stmt->elseBranch) {
             stmt->elseBranch->accept(this);
         }
     }
@@ -210,57 +243,95 @@ public:
         stmt->right->accept(this);
         auto rightValue = result;
         
-        bool isGreater = std::get<double>(leftValue) > std::get<double>(rightValue);
-        
-        if (isGreater) {
-            if (stmt->thenBranch) {
-                stmt->thenBranch->accept(this);
-            }
-            return;
+        bool isGreater = false;
+        try {
+            isGreater = std::get<double>(leftValue) > std::get<double>(rightValue);
+        } catch (...) {
+            isGreater = false;
         }
-
-        // Try each else-if branch
-        for (const auto& elseIfPair : stmt->elseIfBranches) {
-            // Evaluate the condition expression
-            elseIfPair.first->accept(this);
-            bool condition = std::get<double>(result) != 0.0;
+        
+        result = static_cast<double>(isGreater);
+        
+        if (isGreater && stmt->thenBranch) {
+            stmt->thenBranch->accept(this);
+            return; // Return after executing then branch
+        }
+        
+        // Try each else-if branch if the condition was false
+        if (!isGreater) {
+            // Check else-if branches
+            for (const auto& elseIfPair : stmt->elseIfBranches) {
+                elseIfPair.first->accept(this);
+                bool condition = std::get<double>(result) != 0.0;
+                
+                if (condition) {
+                    elseIfPair.second->accept(this);
+                    return; // Return after executing matching branch
+                }
+            }
             
-            if (condition) {
-                elseIfPair.second->accept(this);
-                return;  // Important: return after executing matching branch
+            // If no else-if conditions matched, execute else branch
+            if (stmt->elseBranch) {
+                stmt->elseBranch->accept(this);
             }
-        }
-        
-        // If no conditions matched, execute else branch
-        if (stmt->elseBranch) {
-            stmt->elseBranch->accept(this);
         }
     }
 
     void visit(CompLStmt *stmt) override {
+        if (!stmt) return;
+        
         stmt->left->accept(this);
         auto leftValue = result;
         stmt->right->accept(this);
         auto rightValue = result;
         
-        bool isLess = std::get<double>(leftValue) < std::get<double>(rightValue);
+        bool isLess = false;
+        try {
+            isLess = std::get<double>(leftValue) < std::get<double>(rightValue);
+        } catch (...) {
+            isLess = false;
+        }
+        
         result = static_cast<double>(isLess);
         
         if (isLess && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
-        } else if (!isLess && stmt->elseBranch) {
+            return; // Return after executing then branch
+        }
+        
+        if (!isLess && stmt->elseBranch) {
             stmt->elseBranch->accept(this);
         }
     }
 
     void visit(AndStmt *stmt) override {
+        // First, ensure we have a valid statement
+        if (!stmt) return;
+        
+        // Evaluate first condition
         stmt->left->accept(this);
-        auto leftValue = result;
-        if (std::get<double>(leftValue) != 0.0) {
-            stmt->right->accept(this);
-            auto rightValue = result;
-            if (std::get<double>(rightValue) != 0.0) {
-                stmt->thenBranch->accept(this);
+        double firstResult = std::get<double>(result);
+        
+        // Short-circuit if first condition is false
+        if (firstResult == 0.0) {
+            if (stmt->elseBranch) {
+                stmt->elseBranch->accept(this);
+            }
+            return;
+        }
+        
+        // Evaluate second condition only if first was true
+        stmt->right->accept(this);
+        double secondResult = std::get<double>(result);
+        
+        // Execute the appropriate branch based on the result
+        if (secondResult != 0.0) {
+            // Both conditions are true
+            stmt->thenBranch->accept(this);
+        } else {
+            // Second condition is false
+            if (stmt->elseBranch) {
+                stmt->elseBranch->accept(this);
             }
         }
     }
@@ -415,32 +486,24 @@ public:
         
         bool allTrue = true;
         for (const auto& condition : stmt->conditions) {
-            if (auto compEq = dynamic_cast<CompEqStmt*>(condition.get())) {
-                compEq->left->accept(this);
-                auto leftValue = result;
-                compEq->right->accept(this);
-                auto rightValue = result;
-                
-                try {
-                    if (std::get<double>(leftValue) != std::get<double>(rightValue)) {
-                        allTrue = false;
-                        break;
-                    }
-                } catch (...) {
+            condition->accept(this);
+            auto value = result;
+            
+            try {
+                if (std::get<double>(value) == 0.0) {
                     allTrue = false;
                     break;
                 }
+            } catch (...) {
+                allTrue = false;
+                break;
             }
         }
         
-        if (allTrue) {
-            if (stmt->thenBranch) {
-                stmt->thenBranch->accept(this);
-            }
-        } else {
-            if (stmt->elseBranch) {
-                stmt->elseBranch->accept(this);
-            }
+        if (allTrue && stmt->thenBranch) {
+            stmt->thenBranch->accept(this);
+        } else if (!allTrue && stmt->elseBranch) {
+            stmt->elseBranch->accept(this);
         }
     }
 

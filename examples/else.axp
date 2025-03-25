@@ -1,5 +1,4 @@
 var num;
-print "Test 1 - Greater than comparison:";
 print "Enter a number : ";
 input num;
 compg(num, 5){
@@ -10,69 +9,4 @@ else if compeq(num, 5){
 }
 else{
     print "num is less than 5";
-}
-
-print "Test 2 - Equal comparison:";
-print "Enter a number : ";
-input num;
-compeq(num, 1){
-    print "num is equal to 1";
-}
-else if compeq(num, 2){
-    print "num is equal to 2";
-}
-else{
-    print "num is not equal to 1 and 2";
-}
-
-print "\nTest 3 - Less than comparison:";
-print "Enter a number : ";
-input num;
-compl(num, 5){
-    print "num is less than 5";
-}
-else if compeq(num, 5){
-    print "num is equal to 5";
-}
-else{
-    print "num is greater than 5";
-}
-
-print "Test 4 - Greater than or equal comparison:";
-print "Enter a number : ";
-input num;
-compge(num, 5){
-    print "num is greater than or equal to 5";
-}
-else if compl(num, 3){
-    print "num is less than 3";
-}
-else{
-    print "num is between 3 and 5";
-}
-
-print "Test 5 - Less than or equal comparison:";
-print "Enter a number : ";
-input num;
-comple(num, 5){
-    print "num is less than or equal to 5";
-}
-else if compg(num, 8){
-    print "num is greater than 8";
-}
-else{
-    print "num is between 5 and 8";
-}
-
-print "Test 6 - Not equal comparison:";
-print "Enter a number : ";
-input num;
-compneq(num, 5){
-    print "num is not equal to 5";
-}
-else if compg(num, 10){
-    print "num is greater than 10";
-}
-else{
-    print "num is equal to 5";
 }
