@@ -86,7 +86,32 @@ private:
         }
 
         if (match({TokenType::COMPEQ})) {
-            return compEqStatement();
+            auto stmt = compEqStatement();
+            
+            if (match({TokenType::AND})) {
+                auto conditions = std::vector<std::unique_ptr<Stmt>>();
+                conditions.push_back(std::move(stmt));
+                conditions.push_back(compEqStatement());
+                auto thenBranch = statement();
+                std::unique_ptr<Stmt> elseBranch = nullptr;
+                if (match({TokenType::ELSE})) {
+                    elseBranch = statement();
+                }
+                return std::make_unique<AndConditionStmt>(std::move(conditions), std::move(thenBranch), std::move(elseBranch));
+            }
+            else if (match({TokenType::OR})) {
+                auto conditions = std::vector<std::unique_ptr<Stmt>>();
+                conditions.push_back(std::move(stmt));
+                conditions.push_back(compEqStatement());
+                auto thenBranch = statement();
+                std::unique_ptr<Stmt> elseBranch = nullptr;
+                if (match({TokenType::ELSE})) {
+                    elseBranch = statement();
+                }
+                return std::make_unique<OrConditionStmt>(std::move(conditions), std::move(thenBranch), std::move(elseBranch));
+            }
+            
+            return stmt;  // Return the statement directly
         }
         if (match({TokenType::COMPNEQ})) {
             return compNeqStatement();
@@ -106,6 +131,12 @@ private:
         if (match({TokenType::NOT})) {
             return notStatement();
         }
+        if (match({TokenType::COMPG})) {
+            return compGStatement();
+        }
+        if (match({TokenType::COMPL})) {
+            return compLStatement();
+        }
 
         return expressionStatement();
     }
@@ -123,8 +154,38 @@ private:
         consume(TokenType::COMMA, "Expect ',' after left operand.");
         auto right = expression();
         consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+
+        // Check for AND/OR
+        if (peek().type == TokenType::AND || peek().type == TokenType::OR) {
+            auto conditions = std::vector<std::unique_ptr<Stmt>>();
+            conditions.push_back(std::make_unique<CompEqStmt>(std::move(left), std::move(right), nullptr));
+
+            TokenType logicOp = peek().type;
+            advance(); // consume AND/OR
+
+            auto nextCondition = compEqStatement();
+            conditions.push_back(std::move(nextCondition));
+
+            auto thenBranch = statement();
+            std::unique_ptr<Stmt> elseBranch = nullptr;
+            
+            if (match({TokenType::ELSE})) {
+                elseBranch = statement();
+            }
+
+            if (logicOp == TokenType::AND) {
+                return std::make_unique<AndConditionStmt>(std::move(conditions), std::move(thenBranch), std::move(elseBranch));
+            } else {
+                return std::make_unique<OrConditionStmt>(std::move(conditions), std::move(thenBranch), std::move(elseBranch));
+            }
+        }
+
         auto thenBranch = statement();
-        return std::make_unique<CompEqStmt>(std::move(left), std::move(right), std::move(thenBranch));
+        std::unique_ptr<Stmt> elseBranch = nullptr;
+        if (match({TokenType::ELSE})) {
+            elseBranch = statement();
+        }
+        return std::make_unique<CompEqStmt>(std::move(left), std::move(right), std::move(thenBranch), std::move(elseBranch));
     }
 
     std::unique_ptr<Stmt> compNeqStatement() {
@@ -183,6 +244,26 @@ private:
         consume(TokenType::RIGHT_PAREN, "Expect ')' after operand.");
         auto thenBranch = statement();
         return std::make_unique<NotStmt>(std::move(operand), std::move(thenBranch));
+    }
+
+    std::unique_ptr<Stmt> compGStatement() {
+        consume(TokenType::LEFT_PAREN, "Expect '(' after 'compg'.");
+        auto left = expression();
+        consume(TokenType::COMMA, "Expect ',' after left operand.");
+        auto right = expression();
+        consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+        auto thenBranch = statement();
+        return std::make_unique<CompGStmt>(std::move(left), std::move(right), std::move(thenBranch));
+    }
+
+    std::unique_ptr<Stmt> compLStatement() {
+        consume(TokenType::LEFT_PAREN, "Expect '(' after 'compl'.");
+        auto left = expression();
+        consume(TokenType::COMMA, "Expect ',' after left operand.");
+        auto right = expression();
+        consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
+        auto thenBranch = statement();
+        return std::make_unique<CompLStmt>(std::move(left), std::move(right), std::move(thenBranch));
     }
 
     std::unique_ptr<Stmt> printStatement()
@@ -283,9 +364,20 @@ private:
 
     std::unique_ptr<Expr> primary()
     {
-        if (match({TokenType::NUMBER}))
-        {
-            return std::make_unique<NumberExpr>(std::stod(previous().lexeme));
+        if (match({TokenType::MINUS})) {
+            if (match({TokenType::NUMBER})) {
+                std::string numStr = "-" + previous().lexeme;
+                return std::make_unique<NumberExpr>(std::stod(numStr));
+            }
+            throw std::runtime_error("Expected number after minus sign.");
+        }
+        
+        if (match({TokenType::NUMBER})) {
+            try {
+                return std::make_unique<NumberExpr>(std::stod(previous().lexeme));
+            } catch (const std::exception& e) {
+                throw std::runtime_error("Invalid number format");
+            }
         }
         if (match({TokenType::STRING}))
         {
@@ -339,6 +431,43 @@ private:
 
         return std::make_unique<LoopStmt>(var, std::move(from), std::move(to),
                                           std::move(step), std::move(body), isDownward);
+    }
+
+    std::unique_ptr<Stmt> parseLogicalExpression() {
+        std::vector<std::unique_ptr<Stmt>> conditions;
+        
+        // Parse first condition
+        conditions.push_back(parseCondition());
+        
+        // Look for "and" or "or"
+        bool isAnd = match({TokenType::AND});
+        bool isOr = match({TokenType::OR});
+        
+        // Parse additional conditions
+        while (isAnd || isOr) {
+            conditions.push_back(parseCondition());
+            isAnd = match({TokenType::AND});
+            isOr = match({TokenType::OR});
+        }
+        
+        auto thenBranch = statement();
+        
+        if (isAnd) {
+            return std::make_unique<AndConditionStmt>(std::move(conditions), std::move(thenBranch));
+        } else if (isOr) {
+            return std::make_unique<OrConditionStmt>(std::move(conditions), std::move(thenBranch));
+        }
+        
+        // Fix: Move the unique_ptr instead of trying to return by reference
+        return std::move(conditions[0]);
+    }
+
+    std::unique_ptr<Stmt> parseCondition() {
+        if (match({TokenType::COMPEQ})) {
+            return compEqStatement();
+        }
+        // ... other condition types ...
+        throw std::runtime_error("Expected condition");
     }
 
     bool match(const std::vector<TokenType> &types)

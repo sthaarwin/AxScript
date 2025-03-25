@@ -34,6 +34,8 @@ private:
         {"compneq", TokenType::COMPNEQ},
         {"compge", TokenType::COMPGE},
         {"comple", TokenType::COMPLE},
+        {"compg", TokenType::COMPG},
+        {"compl", TokenType::COMPL},
         {"and", TokenType::AND},
         {"or", TokenType::OR},
         {"not", TokenType::NOT}

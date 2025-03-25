@@ -14,6 +14,9 @@ Current features include:
 - Loops
 - Error handling and recovery
 - REPL (Read-Eval-Print Loop) interface
+- Logical operations (AND, OR)
+- Comparison with else branches
+- Short-circuit evaluation for logical operations
 
 Example code:
 ```
@@ -97,7 +100,7 @@ make all
 
 3. Run the executable:
 ```bash
-./src/output/axscript
+./bin/axscript
 ```
 
 ## Usage
@@ -136,6 +139,8 @@ input variableName;
 - `compneq (left, right) { ... }`: Executes the block if `left` is not equal to `right`.
 - `compge (left, right) { ... }`: Executes the block if `left` is greater than or equal to `right`.
 - `comple (left, right) { ... }`: Executes the block if `left` is less than or equal to `right`.
+- `compg (left, right) { ... }`: Executes the block if `left` is greater than `right`.
+- `compl (left, right) { ... }`: Executes the block if `left` is less than `right`.
 
 Example:
 ```
@@ -154,6 +159,14 @@ compge (x, 5) {
 comple (x, 15) {
     print "x is less than or equal to 15";
 }
+
+compg (x, 7) {
+    print "x is greater than 7";
+}
+
+compl (x, 20) {
+    print "x is less than 20";
+}
 ```
 
 ### Loop(increment) Statement
@@ -164,6 +177,25 @@ loop var=initial-value to max-range{}
 ### Loop(decrement) Statement
 ```
 loop var=initial-value to min-range down{}
+```
+
+### Logical Operations
+AxScript supports logical AND and OR operations in comparison statements:
+
+```
+// AND operation - both conditions must be true
+compeq(a, 2) and compeq(b, 1) {
+    print("Both conditions are true");
+} else {
+    print("AND condition failed");
+}
+
+// OR operation - at least one condition must be true
+compeq(a, 2) or compeq(b, 3) {
+    print("At least one condition is true");
+} else {
+    print("OR condition failed");
+}
 ```
 
 ### Expressions
@@ -194,6 +226,7 @@ The interpreter provides error messages for:
 
 - [x] Control flow (comparison statements)
 - [x] Loops
+- [x] Logical operations
 - [ ] Functions
 - [ ] More data types (boolean, arrays)
 - [ ] Standard library

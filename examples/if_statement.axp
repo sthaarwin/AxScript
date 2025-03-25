@@ -1,15 +1,27 @@
-var num = 3;
-compeq(num, 3){
-    print("num is 3");
-}
-compneq(num, 4){
-    print("num is not 4");
+print "Enter a number : ";
+var x;
+input x;
+
+compeq (x, 10) {
+    print " is 10";
 }
 
-comple(num, 5){
-    print("num is less than 5");
+compneq (x, 10) {
+    print " is not 10";
 }
 
-compge(num, 2){
-    print("num is greater than or equal to 2");
+compge (x, 5) {
+    print " is greater than or equal to 5";
+}
+
+comple (x, 15) {
+    print " is less than or equal to 15";
+}
+
+compl(x,6){
+    print(" is less than 6");
+}
+
+compg(x,1){
+    print(" is greater than 1");
 }

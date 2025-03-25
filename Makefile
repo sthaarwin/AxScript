@@ -1,5 +1,5 @@
 all:
-	g++ src/lexer.cpp src/tokens.cpp src/main.cpp -o src/output/axscript
+	g++ src/lexer.cpp src/tokens.cpp src/main.cpp -o bin/axscript
 
 clean:
-	rm -f src/output/axscript
+	rm -f bin/axscript

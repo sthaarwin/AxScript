@@ -191,9 +191,12 @@ public:
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
     std::unique_ptr<Stmt> thenBranch;
+    std::unique_ptr<Stmt> elseBranch;
 
-    CompEqStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
-        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+    CompEqStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, 
+               std::unique_ptr<Stmt> thenBranch, std::unique_ptr<Stmt> elseBranch = nullptr)
+        : left(std::move(left)), right(std::move(right)), 
+          thenBranch(std::move(thenBranch)), elseBranch(std::move(elseBranch)) {}
 
     void accept(Visitor *visitor) override {
         visitor->visit(this);
@@ -242,6 +245,34 @@ public:
     }
 };
 
+class CompGStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+    std::unique_ptr<Stmt> thenBranch;
+
+    CompGStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
+        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class CompLStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+    std::unique_ptr<Stmt> thenBranch;
+
+    CompLStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right, std::unique_ptr<Stmt> thenBranch)
+        : left(std::move(left)), right(std::move(right)), thenBranch(std::move(thenBranch)) {}
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
 class AndStmt : public Stmt {
 public:
     std::unique_ptr<Expr> left;
@@ -279,6 +310,38 @@ public:
         : operand(std::move(operand)), thenBranch(std::move(thenBranch)) {}
 
     void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class ConditionStmt : public Stmt {
+public:
+    std::vector<std::unique_ptr<Stmt>> conditions;
+    std::unique_ptr<Stmt> thenBranch;
+    std::unique_ptr<Stmt> elseBranch;  // Add else branch
+
+    ConditionStmt(std::vector<std::unique_ptr<Stmt>>&& conditions, 
+                  std::unique_ptr<Stmt> thenBranch,
+                  std::unique_ptr<Stmt> elseBranch = nullptr)
+        : conditions(std::move(conditions)), 
+          thenBranch(std::move(thenBranch)),
+          elseBranch(std::move(elseBranch)) {}
+
+    virtual ~ConditionStmt() = default;
+};
+
+class AndConditionStmt : public ConditionStmt {
+public:
+    using ConditionStmt::ConditionStmt;
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class OrConditionStmt : public ConditionStmt {
+public:
+    using ConditionStmt::ConditionStmt;
+    void accept(Visitor* visitor) override {
         visitor->visit(this);
     }
 };

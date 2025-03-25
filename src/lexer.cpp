@@ -42,29 +42,34 @@ std::vector<Token> Lexer::lex() {
     std::vector<Token> tokens;
     while (!isAtEnd()) {
         skipWhiteSpace();
+        if (isAtEnd()) break;
+
         char ch = currentChar();
-        Token token;
+
+        if (ch == '-' && current + 1 < source.size() && std::isdigit(source[current + 1])) {
+            // Handle negative number
+            Token token = number();
+            tokens.push_back(token);
+            continue;
+        }
 
         if (std::isalpha(ch)) {
-            token = identifier();
+            tokens.push_back(identifier());
         }
         else if (std::isdigit(ch)) {
-            token = number();
-        }  
+            tokens.push_back(number());
+        }
         else if (ch == '"') {
-            token = string();
+            tokens.push_back(string());
         }
         else {
-            token.type = identifyToken(ch);
-            token.lexeme = std::string(1, ch);
+            TokenType type = identifyToken(ch);
+            tokens.push_back(Token(type, std::string(1, ch), "", line));
             advance();
         }
-        tokens.push_back(token);
     }
 
-    Token eofToken;
-    eofToken.type = TokenType::EOF_TOKEN;
-    tokens.push_back(eofToken);
+    tokens.push_back(Token(TokenType::EOF_TOKEN));
     return tokens;
 }
 
@@ -148,21 +153,30 @@ Token Lexer::string() {
 
 Token Lexer::number() {
     std::string lexeme;
+    
+    // Handle negative sign
+    if (currentChar() == '-') {
+        lexeme += '-';
+        advance();
+    }
+    
+    // Collect digits before decimal point
     while (!isAtEnd() && std::isdigit(currentChar())) {
         lexeme += currentChar();
         advance();
     }
     
-    // Optional: Handle decimal numbers
-    if (!isAtEnd() && currentChar() == '.' && std::isdigit(peek())) {
-        lexeme += currentChar();
+    // Handle decimal point
+    if (!isAtEnd() && currentChar() == '.') {
+        lexeme += '.';
         advance();
+        
         while (!isAtEnd() && std::isdigit(currentChar())) {
             lexeme += currentChar();
             advance();
         }
     }
-    
+
     Token token;
     token.type = TokenType::NUMBER;
     token.lexeme = lexeme;
@@ -206,7 +220,14 @@ void Lexer::scanToken()
         addToken(TokenType::DOT);
         break;
     case '-':
-        addToken(TokenType::MINUS);
+        if (current + 1 < source.size() && std::isdigit(source[current + 1])) {
+            // This is a negative number
+            tokens.push_back(Token(TokenType::MINUS, "-", "", line));
+            advance();  // Move past the minus sign
+            tokens.push_back(number());
+        } else {
+            addToken(TokenType::MINUS);
+        }
         break;
     case '+':
         addToken(TokenType::PLUS);
