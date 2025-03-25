@@ -1,0 +1,8 @@
+var a = 2;
+var b = 3;
+
+compeq(a, 2) or compeq(b, 3) {
+    print("At least one condition is true");
+} else {
+    print("Both conditions are false");
+}

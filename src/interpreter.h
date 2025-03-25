@@ -337,15 +337,35 @@ public:
     }
 
     void visit(OrStmt *stmt) override {
+        // Ensure we have a valid statement
+        if (!stmt) return;
+        
+        // Evaluate first condition
         stmt->left->accept(this);
-        auto leftValue = result;
-        if (std::get<double>(leftValue) != 0.0) {
-            stmt->thenBranch->accept(this);
-        } else {
-            stmt->right->accept(this);
-            auto rightValue = result;
-            if (std::get<double>(rightValue) != 0.0) {
+        double firstResult = std::get<double>(result);
+        
+        // Short-circuit if first condition is true
+        if (firstResult != 0.0) {
+            if (stmt->thenBranch) {
                 stmt->thenBranch->accept(this);
+            }
+            return;
+        }
+        
+        // Evaluate second condition only if first was false
+        stmt->right->accept(this);
+        double secondResult = std::get<double>(result);
+        
+        // Execute appropriate branch based on result
+        if (secondResult != 0.0) {
+            // At least one condition is true
+            if (stmt->thenBranch) {
+                stmt->thenBranch->accept(this);
+            }
+        } else {
+            // Both conditions are false
+            if (stmt->elseBranch) {
+                stmt->elseBranch->accept(this);
             }
         }
     }

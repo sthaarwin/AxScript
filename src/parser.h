@@ -92,8 +92,17 @@ private:
             auto rightExpr = expression();
             consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
             
-            auto andStmt = handleAND(std::move(leftExpr), std::move(rightExpr), TokenType::COMPEQ);
-            if (andStmt) return andStmt;
+            // First check for AND
+            if (check(TokenType::AND)) {
+                auto andStmt = handleAND(std::move(leftExpr), std::move(rightExpr), TokenType::COMPEQ);
+                return andStmt;
+            }
+            
+            // Then check for OR
+            if (check(TokenType::OR)) {
+                auto orStmt = handleOR(std::move(leftExpr), std::move(rightExpr), TokenType::COMPEQ);
+                return orStmt;
+            }
             
             // Regular compeq statement
             auto thenBranch = statement();
@@ -123,10 +132,17 @@ private:
             auto rightExpr = expression();
             consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
             
+            // First check for AND
             auto andStmt = handleAND(std::move(leftExpr), std::move(rightExpr), TokenType::COMPNEQ);
             if (andStmt) return andStmt;
             
-            // If not part of AND, continue with regular compneq
+            // Then check for OR
+            if (check(TokenType::OR)) {
+                auto orStmt = handleOR(std::move(leftExpr), std::move(rightExpr), TokenType::COMPNEQ);
+                return orStmt;
+            }
+            
+            // If not part of AND or OR, continue with regular compneq
             return compNeqStatementBody(std::move(leftExpr), std::move(rightExpr));
         }
         if (match({TokenType::COMPGE})) {
@@ -136,10 +152,17 @@ private:
             auto rightExpr = expression();
             consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
             
+            // First check for AND
             auto andStmt = handleAND(std::move(leftExpr), std::move(rightExpr), TokenType::COMPGE);
             if (andStmt) return andStmt;
             
-            // If not part of AND, continue with regular compge
+            // Then check for OR
+            if (check(TokenType::OR)) {
+                auto orStmt = handleOR(std::move(leftExpr), std::move(rightExpr), TokenType::COMPGE);
+                return orStmt;
+            }
+            
+            // If not part of AND or OR, continue with regular compge
             return compGeStatementBody(std::move(leftExpr), std::move(rightExpr));
         }
         if (match({TokenType::COMPLE})) {
@@ -149,10 +172,17 @@ private:
             auto rightExpr = expression();
             consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
             
+            // First check for AND
             auto andStmt = handleAND(std::move(leftExpr), std::move(rightExpr), TokenType::COMPLE);
             if (andStmt) return andStmt;
             
-            // If not part of AND, continue with regular comple
+            // Then check for OR
+            if (check(TokenType::OR)) {
+                auto orStmt = handleOR(std::move(leftExpr), std::move(rightExpr), TokenType::COMPLE);
+                return orStmt;
+            }
+            
+            // If not part of AND or OR, continue with regular comple
             return compLeStatementBody(std::move(leftExpr), std::move(rightExpr));
         }
         if (match({TokenType::COMPG})) {
@@ -162,10 +192,17 @@ private:
             auto rightExpr = expression();
             consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
             
+            // First check for AND
             auto andStmt = handleAND(std::move(leftExpr), std::move(rightExpr), TokenType::COMPG);
             if (andStmt) return andStmt;
             
-            // If not part of AND, continue with regular compg
+            // Then check for OR
+            if (check(TokenType::OR)) {
+                auto orStmt = handleOR(std::move(leftExpr), std::move(rightExpr), TokenType::COMPG);
+                return orStmt;
+            }
+            
+            // If not part of AND or OR, continue with regular compg
             return compGStatementBody(std::move(leftExpr), std::move(rightExpr));
         }
         if (match({TokenType::COMPL})) {
@@ -175,10 +212,17 @@ private:
             auto rightExpr = expression();
             consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
             
+            // First check for AND
             auto andStmt = handleAND(std::move(leftExpr), std::move(rightExpr), TokenType::COMPL);
             if (andStmt) return andStmt;
             
-            // If not part of AND, continue with regular compl
+            // Then check for OR
+            if (check(TokenType::OR)) {
+                auto orStmt = handleOR(std::move(leftExpr), std::move(rightExpr), TokenType::COMPL);
+                return orStmt;
+            }
+            
+            // If not part of AND or OR, continue with regular compl
             return compLStatementBody(std::move(leftExpr), std::move(rightExpr));
         }
 
@@ -697,10 +741,11 @@ private:
         }
     }
 
-    // Add a new handleLogicalOperators helper method
-    std::unique_ptr<Stmt> handleAND(std::unique_ptr<Expr> leftExpr, std::unique_ptr<Expr> rightExpr, TokenType opType) {
-        if (check(TokenType::AND)) {
-            advance(); // consume AND
+    // Add a more generic handleLogicalOperators method to handle both AND and OR
+    std::unique_ptr<Stmt> handleLogicalOperator(std::unique_ptr<Expr> leftExpr, std::unique_ptr<Expr> rightExpr, 
+                                               TokenType opType, TokenType logicalOp) {
+        if (check(logicalOp)) {
+            advance(); // consume AND or OR
             
             // Create the first condition based on operator type
             std::unique_ptr<Expr> firstCondExpr;
@@ -767,7 +812,7 @@ private:
                     );
                 }
             } else {
-                throw std::runtime_error("Expected comparison operator after 'and'");
+                throw std::runtime_error("Expected comparison operator after logical operator");
             }
             
             // Parse branches
@@ -777,16 +822,34 @@ private:
                 elseBranch = statement();
             }
             
-            // Create AND statement
-            return std::make_unique<AndStmt>(
-                std::move(firstCondExpr),
-                std::move(secondCondExpr),
-                std::move(thenBranch),
-                std::move(elseBranch)
-            );
+            // Create the appropriate logical statement
+            if (logicalOp == TokenType::AND) {
+                return std::make_unique<AndStmt>(
+                    std::move(firstCondExpr),
+                    std::move(secondCondExpr),
+                    std::move(thenBranch),
+                    std::move(elseBranch)
+                );
+            } else { // TokenType::OR
+                return std::make_unique<OrStmt>(
+                    std::move(firstCondExpr),
+                    std::move(secondCondExpr),
+                    std::move(thenBranch),
+                    std::move(elseBranch)
+                );
+            }
         }
         
         return nullptr;
+    }
+
+    // Simplified wrapper methods for specific logical operators
+    std::unique_ptr<Stmt> handleAND(std::unique_ptr<Expr> leftExpr, std::unique_ptr<Expr> rightExpr, TokenType opType) {
+        return handleLogicalOperator(std::move(leftExpr), std::move(rightExpr), opType, TokenType::AND);
+    }
+    
+    std::unique_ptr<Stmt> handleOR(std::unique_ptr<Expr> leftExpr, std::unique_ptr<Expr> rightExpr, TokenType opType) {
+        return handleLogicalOperator(std::move(leftExpr), std::move(rightExpr), opType, TokenType::OR);
     }
 
     // Helper methods for the statement body of each comparison type
