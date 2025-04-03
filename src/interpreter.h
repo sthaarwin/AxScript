@@ -536,17 +536,14 @@ public:
         
         bool allTrue = true;
         for (const auto& condition : stmt->conditions) {
-            condition->accept(this);
-            auto value = result;
-            
-            try {
-                if (std::get<double>(value) == 0.0) {
-                    allTrue = false;
-                    break;
+            if (auto exprStmt = dynamic_cast<ExpressionStmt*>(condition.get())) {
+                if (auto compEqExpr = dynamic_cast<CompEqExpr*>(exprStmt->expression.get())) {
+                    compEqExpr->accept(this);
+                    if (std::get<double>(result) == 0.0) {
+                        allTrue = false;
+                        break;
+                    }
                 }
-            } catch (...) {
-                allTrue = false;
-                break;
             }
         }
         
@@ -555,37 +552,33 @@ public:
         } else if (!allTrue && stmt->elseBranch) {
             stmt->elseBranch->accept(this);
         }
+        
+        result = static_cast<double>(allTrue); // Store the overall result
     }
 
     void visit(OrConditionStmt* stmt) override {
-        if (!stmt) return;
+        if (!stmt || stmt->conditions.empty()) return;
         
         bool anyTrue = false;
         for (const auto& condition : stmt->conditions) {
-            if (auto compEq = dynamic_cast<CompEqStmt*>(condition.get())) {
-                compEq->left->accept(this);
-                auto leftValue = result;
-                compEq->right->accept(this);
-                auto rightValue = result;
-                
-                try {
-                    if (std::get<double>(leftValue) == std::get<double>(rightValue)) {
+            if (auto exprStmt = dynamic_cast<ExpressionStmt*>(condition.get())) {
+                if (auto compEqExpr = dynamic_cast<CompEqExpr*>(exprStmt->expression.get())) {
+                    compEqExpr->accept(this);
+                    if (std::get<double>(result) != 0.0) {
                         anyTrue = true;
                         break;
                     }
-                } catch (...) {
-                    continue;
                 }
             }
         }
-        
-        result = static_cast<double>(anyTrue);  // Store the overall result
         
         if (anyTrue && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
         } else if (!anyTrue && stmt->elseBranch) {
             stmt->elseBranch->accept(this);
         }
+        
+        result = static_cast<double>(anyTrue); // Store the overall result
     }
 
     void interpret(const std::vector<std::unique_ptr<Stmt>> &statements)

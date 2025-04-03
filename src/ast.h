@@ -391,7 +391,11 @@ public:
 
 class AndConditionStmt : public ConditionStmt {
 public:
-    using ConditionStmt::ConditionStmt;
+    AndConditionStmt(std::vector<std::unique_ptr<Stmt>>&& conditions, 
+                     std::unique_ptr<Stmt> thenBranch,
+                     std::unique_ptr<Stmt> elseBranch = nullptr)
+        : ConditionStmt(std::move(conditions), std::move(thenBranch), std::move(elseBranch)) {}
+    
     void accept(Visitor* visitor) override {
         visitor->visit(this);
     }
@@ -399,7 +403,11 @@ public:
 
 class OrConditionStmt : public ConditionStmt {
 public:
-    using ConditionStmt::ConditionStmt;
+    OrConditionStmt(std::vector<std::unique_ptr<Stmt>>&& conditions, 
+                    std::unique_ptr<Stmt> thenBranch,
+                    std::unique_ptr<Stmt> elseBranch = nullptr)
+        : ConditionStmt(std::move(conditions), std::move(thenBranch), std::move(elseBranch)) {}
+    
     void accept(Visitor* visitor) override {
         visitor->visit(this);
     }

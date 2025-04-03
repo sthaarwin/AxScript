@@ -747,99 +747,61 @@ private:
         if (check(logicalOp)) {
             advance(); // consume AND or OR
             
-            // Create the first condition based on operator type
-            std::unique_ptr<Expr> firstCondExpr;
-            if (opType == TokenType::COMPEQ) {
-                firstCondExpr = std::make_unique<CompEqExpr>(std::move(leftExpr), std::move(rightExpr));
-            } else {
-                TokenType binaryOpType;
-                std::string opStr;
-                
-                // Map comparison operators to binary operators
-                switch (opType) {
-                    case TokenType::COMPNEQ: binaryOpType = TokenType::BANG_EQUAL; opStr = "!="; break;
-                    case TokenType::COMPGE: binaryOpType = TokenType::GREATER_EQUAL; opStr = ">="; break;
-                    case TokenType::COMPLE: binaryOpType = TokenType::LESS_EQUAL; opStr = "<="; break;
-                    case TokenType::COMPG: binaryOpType = TokenType::GREATER; opStr = ">"; break;
-                    case TokenType::COMPL: binaryOpType = TokenType::LESS; opStr = "<"; break;
-                    default: binaryOpType = TokenType::EQUAL_EQUAL; opStr = "=="; break;
-                }
-                
-                firstCondExpr = std::make_unique<BinaryExpr>(
-                    std::move(leftExpr),
-                    Token(binaryOpType, opStr),
-                    std::move(rightExpr)
-                );
-            }
+            // Create first condition
+            std::vector<std::unique_ptr<Stmt>> conditions;
+            conditions.push_back(std::make_unique<ExpressionStmt>(
+                std::make_unique<CompEqExpr>(std::move(leftExpr), std::move(rightExpr))
+            ));
             
-            // Parse the second condition (any comparison type)
-            std::unique_ptr<Expr> secondCondExpr;
-            TokenType secondCompType;
-            
-            if (match({TokenType::COMPEQ, TokenType::COMPNEQ, TokenType::COMPGE, 
-                      TokenType::COMPLE, TokenType::COMPG, TokenType::COMPL})) {
-                secondCompType = previous().type;
-                
-                // Parse the second comparison
+            // Parse next comparison
+            if (match({TokenType::COMPEQ})) {
                 consume(TokenType::LEFT_PAREN, "Expect '(' after comparison operator");
-                auto secondLeft = expression();
+                auto nextLeft = expression();
                 consume(TokenType::COMMA, "Expect ',' after left operand");
-                auto secondRight = expression();
+                auto nextRight = expression();
                 consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand");
                 
-                // Create appropriate expression based on comparison type
-                if (secondCompType == TokenType::COMPEQ) {
-                    secondCondExpr = std::make_unique<CompEqExpr>(
-                        std::move(secondLeft), std::move(secondRight)
-                    );
-                } else {
-                    TokenType binaryOpType;
-                    std::string opStr;
-                    
-                    switch (secondCompType) {
-                        case TokenType::COMPNEQ: binaryOpType = TokenType::BANG_EQUAL; opStr = "!="; break;
-                        case TokenType::COMPGE: binaryOpType = TokenType::GREATER_EQUAL; opStr = ">="; break;
-                        case TokenType::COMPLE: binaryOpType = TokenType::LESS_EQUAL; opStr = "<="; break;
-                        case TokenType::COMPG: binaryOpType = TokenType::GREATER; opStr = ">"; break;
-                        case TokenType::COMPL: binaryOpType = TokenType::LESS; opStr = "<"; break;
-                        default: binaryOpType = TokenType::EQUAL_EQUAL; opStr = "=="; break;
+                // Add second condition
+                conditions.push_back(std::make_unique<ExpressionStmt>(
+                    std::make_unique<CompEqExpr>(std::move(nextLeft), std::move(nextRight))
+                ));
+                
+                // Handle any additional conditions
+                while (match({logicalOp})) {
+                    if (match({TokenType::COMPEQ})) {
+                        consume(TokenType::LEFT_PAREN, "Expect '(' after comparison operator");
+                        auto nextLeft = expression();
+                        consume(TokenType::COMMA, "Expect ',' after left operand");
+                        auto nextRight = expression();
+                        consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand");
+                        
+                        conditions.push_back(std::make_unique<ExpressionStmt>(
+                            std::make_unique<CompEqExpr>(std::move(nextLeft), std::move(nextRight))
+                        ));
                     }
-                    
-                    secondCondExpr = std::make_unique<BinaryExpr>(
-                        std::move(secondLeft),
-                        Token(binaryOpType, opStr),
-                        std::move(secondRight)
-                    );
                 }
-            } else {
-                throw std::runtime_error("Expected comparison operator after logical operator");
             }
             
-            // Parse branches
             auto thenBranch = statement();
             std::unique_ptr<Stmt> elseBranch = nullptr;
             if (match({TokenType::ELSE})) {
                 elseBranch = statement();
             }
             
-            // Create the appropriate logical statement
             if (logicalOp == TokenType::AND) {
-                return std::make_unique<AndStmt>(
-                    std::move(firstCondExpr),
-                    std::move(secondCondExpr),
+                return std::make_unique<AndConditionStmt>(
+                    std::move(conditions),
                     std::move(thenBranch),
                     std::move(elseBranch)
                 );
-            } else { // TokenType::OR
-                return std::make_unique<OrStmt>(
-                    std::move(firstCondExpr),
-                    std::move(secondCondExpr),
+            } else {
+                return std::make_unique<OrConditionStmt>(
+                    std::move(conditions),
                     std::move(thenBranch),
                     std::move(elseBranch)
                 );
             }
         }
-        
         return nullptr;
     }
 

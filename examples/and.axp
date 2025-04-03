@@ -1,7 +1,14 @@
-var a = 1;
+var a = 2;
 var b = 3;
-compeq(a, 2) and compeq(b, 3) {
-    print("Both conditions are true");
+var c = 1;
+compeq(a, 2) and compeq(b, 3) and compeq(c,2) {
+    print("Both conditions are true\n");
 } else {
-    print("AND condition failed");
+    print("AND condition failed\n");
+}
+
+compeq(a, 2) or compeq(b, 3) {
+    print("At least one condition is true\n");
+} else {
+    print("Both conditions are false\n");
 }
