@@ -26,6 +26,14 @@ class Environment{
         bool isDefined(const std::string& name) const {
             return values.find(name) != values.end();
         }
+
+        void assign(const std::string& name, std::variant<double, std::string> value) {
+            if (values.find(name) != values.end()) {
+                values[name] = value;
+            } else {
+                throw std::runtime_error("Undefined variable '" + name + "'");
+            }
+        }
 };
 
 #endif //ENVIRONMENT_H

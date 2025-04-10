@@ -1,3 +1,20 @@
+var num;
 loop i = 1 to 5 {
-    print i;
+    compeq(i, 1){
+        num = "one";
+    }
+    compeq(i, 2){
+        num = "two";
+    }
+    compeq(i, 3){
+        num = "three";
+    }
+    compeq(i, 4){
+        num = "four";
+    }
+    compeq(i, 5){
+        num = "five";
+    }
+    print num;
+    print "\n";
 }

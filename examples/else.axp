@@ -1,4 +1,5 @@
 var num;
+var num2 = 2;
 print "Enter a number : ";
 input num;
 compg(num, 5){

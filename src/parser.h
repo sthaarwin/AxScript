@@ -401,16 +401,11 @@ private:
             // Check for 'else if'
             if (peek().type == TokenType::IF) {
                 advance(); // consume 'if'
-                if (match({TokenType::COMPEQ})) {
-                    consume(TokenType::LEFT_PAREN, "Expect '(' after 'compeq'.");
-                    auto elseIfLeft = expression();
-                    consume(TokenType::COMMA, "Expect ',' after left operand.");
-                    auto elseIfRight = expression();
-                    consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
-                    auto elseIfBranch = statement();
-                    
-                    auto condition = std::make_unique<CompEqExpr>(std::move(elseIfLeft), std::move(elseIfRight));
-                    elseIfBranches.push_back(std::make_pair(std::move(condition), std::move(elseIfBranch)));
+
+                // Handle AND/OR conditions in else-if
+                auto condition = handleElseIfCondition();
+                if (condition) {
+                    elseIfBranches.push_back(std::make_pair(std::move(condition), statement()));
                 }
             } else {
                 elseBranch = statement();
@@ -425,6 +420,35 @@ private:
             std::move(elseIfBranches),
             std::move(elseBranch)
         );
+    }
+
+    std::unique_ptr<Expr> handleElseIfCondition() {
+        if (match({TokenType::COMPEQ})) {
+            consume(TokenType::LEFT_PAREN, "Expect '(' after comparison operator");
+            auto left = expression();
+            consume(TokenType::COMMA, "Expect ',' after left operand");
+            auto right = expression();
+            consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand");
+
+            auto condition = std::make_unique<CompEqExpr>(std::move(left), std::move(right));
+
+            // Check for AND/OR
+            if (check(TokenType::AND) || check(TokenType::OR)) {
+                TokenType logicalOp = peek().type;
+                advance(); // consume AND/OR
+
+                auto nextCondition = handleElseIfCondition();
+                // Create a binary expression joining the conditions
+                auto combinedCondition = std::make_unique<CompEqExpr>(
+                    std::move(condition),
+                    std::move(nextCondition)
+                );
+                return combinedCondition;
+            }
+
+            return condition;
+        }
+        return nullptr;
     }
 
     std::unique_ptr<Stmt> compLStatement() {
@@ -497,7 +521,25 @@ private:
 
     std::unique_ptr<Expr> expression()
     {
-        return equality();
+        return assignment();
+    }
+
+    std::unique_ptr<Expr> assignment() {
+        auto expr = equality();
+
+        if (match({TokenType::EQUAL})) {
+            auto equals = previous();
+            auto value = assignment();
+
+            if (auto* varExpr = dynamic_cast<VariableExpr*>(expr.get())) {
+                Token name = varExpr->name;
+                return std::make_unique<AssignExpr>(name, std::move(value));
+            }
+
+            throw std::runtime_error("Invalid assignment target.");
+        }
+
+        return expr;
     }
 
     std::unique_ptr<Expr> equality()
@@ -930,16 +972,11 @@ private:
             // Check for 'else if'
             if (peek().type == TokenType::IF) {
                 advance(); // consume 'if'
-                if (match({TokenType::COMPEQ})) {
-                    consume(TokenType::LEFT_PAREN, "Expect '(' after 'compeq'.");
-                    auto elseIfLeft = expression();
-                    consume(TokenType::COMMA, "Expect ',' after left operand.");
-                    auto elseIfRight = expression();
-                    consume(TokenType::RIGHT_PAREN, "Expect ')' after right operand.");
-                    auto elseIfBranch = statement();
-                    
-                    auto condition = std::make_unique<CompEqExpr>(std::move(elseIfLeft), std::move(elseIfRight));
-                    elseIfBranches.push_back(std::make_pair(std::move(condition), std::move(elseIfBranch)));
+
+                // Handle AND/OR conditions in else-if
+                auto condition = handleElseIfCondition();
+                if (condition) {
+                    elseIfBranches.push_back(std::make_pair(std::move(condition), statement()));
                 }
             } else {
                 elseBranch = statement();

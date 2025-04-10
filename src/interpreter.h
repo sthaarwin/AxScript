@@ -98,7 +98,13 @@ public:
             if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, std::string>) {
                 output = arg;
             } else {
-                output = std::to_string(arg);
+                // Check if the number is a whole number
+                double value = arg;
+                if (value == static_cast<int>(value)) {
+                    output = std::to_string(static_cast<int>(value));
+                } else {
+                    output = std::to_string(value);
+                }
             }
             
             // Process escape sequences
@@ -284,26 +290,41 @@ public:
         
         if (isGreater && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
-            return; // Return after executing then branch
+            return;
         }
         
-        // Try each else-if branch if the condition was false
-        if (!isGreater) {
-            // Check else-if branches
+        // Handle else-if branches
+        if (!isGreater && !stmt->elseIfBranches.empty()) {
             for (const auto& elseIfPair : stmt->elseIfBranches) {
-                elseIfPair.first->accept(this);
-                bool condition = std::get<double>(result) != 0.0;
-                
-                if (condition) {
-                    elseIfPair.second->accept(this);
-                    return; // Return after executing matching branch
+                // Try to execute as AndConditionStmt first
+                if (auto andCondition = dynamic_cast<AndConditionStmt*>(elseIfPair.first.get())) {
+                    bool allTrue = true;
+                    for (const auto& condition : andCondition->conditions) {
+                        condition->accept(this);
+                        if (std::get<double>(result) == 0.0) {
+                            allTrue = false;
+                            break;
+                        }
+                    }
+                    if (allTrue) {
+                        elseIfPair.second->accept(this);
+                        return;
+                    }
+                } 
+                // Regular condition
+                else {
+                    elseIfPair.first->accept(this);
+                    if (std::get<double>(result) != 0.0) {
+                        elseIfPair.second->accept(this);
+                        return;
+                    }
                 }
             }
-            
-            // If no else-if conditions matched, execute else branch
-            if (stmt->elseBranch) {
-                stmt->elseBranch->accept(this);
-            }
+        }
+        
+        // If no conditions matched, execute else branch
+        if (!isGreater && stmt->elseBranch) {
+            stmt->elseBranch->accept(this);
         }
     }
 
@@ -521,6 +542,13 @@ public:
     void visit(ExpressionStmt *stmt) override
     {
         stmt->expression->accept(this);
+        // Store the result in case it's needed later
+        auto exprResult = result;
+    }
+
+    void visit(AssignExpr* expr) override {
+        expr->value->accept(this);
+        environment.assign(expr->name.lexeme, result);
     }
 
     void visit(CompEqExpr* expr) override {

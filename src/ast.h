@@ -69,6 +69,19 @@ public:
     }
 };
 
+class AssignExpr : public Expr {
+public:
+    Token name;
+    std::unique_ptr<Expr> value;
+
+    AssignExpr(Token name, std::unique_ptr<Expr> value)
+        : name(name), value(std::move(value)) {}
+
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
 class CompEqExpr : public Expr {
 public:
     std::unique_ptr<Expr> left;
