@@ -62,6 +62,7 @@ loop i = 5 to 1 down {
     print i;
 }
 ```
+
 ## Project Structure
 
 ```
@@ -70,13 +71,30 @@ loop i = 5 to 1 down {
 │   ├── ast.h           # Abstract Syntax Tree definitions
 │   ├── environment.h   # Variable environment management
 │   ├── interpreter.h   # Code interpretation logic
-│   ├── lexer.cpp      # Lexical analysis implementation
-│   ├── lexer.h        # Lexer header
-│   ├── main.cpp       # Entry point
-│   ├── parser.h       # Parser implementation
-│   ├── tokens.cpp     # Token utilities
-│   ├── tokens.h       # Token definitions
-│   └── visitor.h      # Visitor pattern implementation
+│   ├── lexer.cpp       # Lexical analysis implementation
+│   ├── lexer.h         # Lexer header
+│   ├── main.cpp        # Entry point
+│   ├── parser.h        # Parser implementation
+│   ├── tokens.cpp      # Token utilities
+│   ├── tokens.h        # Token definitions
+│   └── visitor.h       # Visitor pattern implementation
+├── examples/
+│   ├── basic/          # Basic language examples
+│   │   ├── hello.axp   # Simple hello world program
+│   │   ├── input.axp   # User input example
+│   │   ├── numbers.axp # Number manipulation
+│   │   └── text.axp    # Text output with escape sequences
+│   ├── control_flow/   # Control flow examples
+│   │   ├── and.axp     # Logical AND operations
+│   │   ├── else.axp    # If-else statements
+│   │   ├── if_statement.axp # Various comparison types
+│   │   └── or.axp      # Logical OR operations
+│   └── loops/          # Loop examples
+│       ├── break.axp   # Breaking out of loops
+│       ├── continue.axp # Continue to next iteration
+│       ├── down_loop.axp # Counting down loop
+│       ├── loop.axp    # Basic loop functionality
+│       └── step_loop.axp # Loops with custom step value
 ```
 
 ## Building the Project
@@ -200,6 +218,11 @@ loop var=initial-value to max-range{}
 loop var=initial-value to min-range down{}
 ```
 
+### Loop with Step Value
+```
+loop var=initial-value to end-value step stepSize {}
+```
+
 ### Logical Operations
 AxScript supports logical AND and OR operations in comparison statements:
 
@@ -234,6 +257,28 @@ The interpreter provides error messages for:
 - Type mismatches
 - Missing semicolons
 - Invalid expressions
+
+## Example Organization
+
+The examples are organized into three main categories:
+
+1. **Basic Examples** (`examples/basic/`):
+   - Simple program structure and syntax
+   - Variable declaration
+   - Input/output operations
+   - Text processing
+   
+2. **Control Flow Examples** (`examples/control_flow/`):
+   - Conditional statements
+   - Comparison operations
+   - Logical operators (AND, OR)
+   - Multi-branch conditionals (if-else if-else)
+   
+3. **Loop Examples** (`examples/loops/`):
+   - Basic iteration
+   - Counting loops (up and down)
+   - Loop control (break, continue)
+   - Advanced loop features (step size)
 
 ## Contributing
 
