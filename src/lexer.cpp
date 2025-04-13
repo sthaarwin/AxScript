@@ -1,10 +1,11 @@
-//lexer.cpp
+// lexer.cpp
 
 #include "lexer.h"
 #include <cctype>
 #include <iostream>
 
-Lexer::Lexer(const std::string source): source(source), current(0), line(1) {
+Lexer::Lexer(const std::string source) : source(source), current(0), line(1)
+{
     keywords["if"] = TokenType::IF;
     keywords["else if"] = TokenType::ELSEIF;
     keywords["else"] = TokenType::ELSE;
@@ -25,44 +26,52 @@ Lexer::Lexer(const std::string source): source(source), current(0), line(1) {
     keywords["compneq"] = TokenType::COMPNEQ;
     keywords["compge"] = TokenType::COMPGE;
     keywords["comple"] = TokenType::COMPLE;
+    keywords["compg"] = TokenType::COMPG;
+    keywords["compl"] = TokenType::COMPL;
     keywords["and"] = TokenType::AND;
-    keywords["or"] = TokenType::OR;
     keywords["not"] = TokenType::NOT;
+    keywords["true"] = TokenType::TRUE;
     // keywords["fun"] = TokenType::FUN;
     // keywords["return"] = TokenType::RETURN;
     // keywords["super"] = TokenType::SUPER;
     // keywords["this"] = TokenType::THIS;
-    // keywords["true"] = TokenType::TRUE;
     // keywords["while"] = TokenType::WHILE;
-    // keywords["and"] = TokenType::AND;
     // keywords["class"] = TokenType::CLASS;
 }
 
-std::vector<Token> Lexer::lex() {
+std::vector<Token> Lexer::lex()
+{
     std::vector<Token> tokens;
-    while (!isAtEnd()) {
+    while (!isAtEnd())
+    {
         skipWhiteSpace();
-        if (isAtEnd()) break;
+        if (isAtEnd())
+            break;
 
         char ch = currentChar();
 
-        if (ch == '-' && current + 1 < source.size() && std::isdigit(source[current + 1])) {
+        if (ch == '-' && current + 1 < source.size() && std::isdigit(source[current + 1]))
+        {
             // Handle negative number
             Token token = number();
             tokens.push_back(token);
             continue;
         }
 
-        if (std::isalpha(ch)) {
+        if (std::isalpha(ch))
+        {
             tokens.push_back(identifier());
         }
-        else if (std::isdigit(ch)) {
+        else if (std::isdigit(ch))
+        {
             tokens.push_back(number());
         }
-        else if (ch == '"') {
+        else if (ch == '"')
+        {
             tokens.push_back(string());
         }
-        else {
+        else
+        {
             TokenType type = identifyToken(ch);
             tokens.push_back(Token(type, std::string(1, ch), "", line));
             advance();
@@ -73,58 +82,131 @@ std::vector<Token> Lexer::lex() {
     return tokens;
 }
 
-char Lexer::currentChar() {
+char Lexer::currentChar()
+{
     return source[current];
 }
 
-void Lexer::advance() {
-    if (!isAtEnd()) { 
+void Lexer::advance()
+{
+    if (!isAtEnd())
+    {
         current++;
     }
 }
 
-TokenType Lexer::identifyToken(char ch) {
-    switch (ch) {
-        case '(': return TokenType::LEFT_PAREN;
-        case ')': return TokenType::RIGHT_PAREN;
-        case '{': return TokenType::LEFT_BRACE;
-        case '}': return TokenType::RIGHT_BRACE;
-        case ',': return TokenType::COMMA;
-        case '.': return TokenType::DOT;
-        case '-': return TokenType::MINUS;
-        case '+': return TokenType::PLUS;
-        case ';': return TokenType::SEMICOLON;
-        case '/': return TokenType::SLASH;
-        case '*': return TokenType::STAR;
-        case '!': return TokenType::BANG;
-        case '=': return TokenType::EQUAL;
-        case '>': return TokenType::GREATER;
-        case '<': return TokenType::LESS;
-        default: return TokenType::EOF_TOKEN;
+TokenType Lexer::identifyToken(char ch)
+{
+    switch (ch)
+    {
+    case '(':
+        return TokenType::LEFT_PAREN;
+    case ')':
+        return TokenType::RIGHT_PAREN;
+    case '{':
+        return TokenType::LEFT_BRACE;
+    case '}':
+        return TokenType::RIGHT_BRACE;
+    case ',':
+        return TokenType::COMMA;
+    case '.':
+        return TokenType::DOT;
+    case '-':
+        return TokenType::MINUS;
+    case '+':
+        return TokenType::PLUS;
+    case ';':
+        return TokenType::SEMICOLON;
+    case '/':
+        return TokenType::SLASH;
+    case '*':
+        return TokenType::STAR;
+    case '!':
+        return TokenType::BANG;
+    case '=':
+        return TokenType::EQUAL;
+    case '>':
+        return TokenType::GREATER;
+    case '<':
+        return TokenType::LESS;
+    default:
+        return TokenType::EOF_TOKEN;
     }
 }
 
-void Lexer::skipWhiteSpace() {
-    while (!isAtEnd() && (currentChar() == ' ' || currentChar() == '\t' || currentChar() == '\n')) {
-        if (currentChar() == '\n') {
-            line++;
+void Lexer::skipWhiteSpace()
+{
+    while (!isAtEnd())
+    {
+        char c = currentChar();
+        
+        switch (c) {
+            case ' ':
+            case '\r':
+            case '\t':
+                advance();
+                break;
+            case '\n':
+                line++;
+                advance();
+                break;
+            case '/':
+                if (current + 1 < source.size()) {
+                    if (source[current + 1] == '/') {
+                        // Single-line comment: skip until end of line
+                        advance();  // Skip first '/'
+                        advance();  // Skip second '/'
+                        while (!isAtEnd() && currentChar() != '\n') {
+                            advance();
+                        }
+                    } else if (source[current + 1] == '*') {
+                        // Multi-line comment: skip until */
+                        advance();  // Skip '/'
+                        advance();  // Skip '*'
+                        while (!isAtEnd()) {
+                            if (currentChar() == '*' && current + 1 < source.size() && source[current + 1] == '/') {
+                                advance();  // Skip '*'
+                                advance();  // Skip '/'
+                                break;
+                            }
+                            
+                            if (currentChar() == '\n') {
+                                line++;
+                            }
+                            
+                            advance();
+                        }
+                    } else {
+                        return;  // This is a division operator, not a comment
+                    }
+                } else {
+                    return;  // Just a single slash at the end
+                }
+                break;
+            default:
+                return;
         }
-        advance();
     }
 }
 
-bool Lexer::isAtEnd() {
+bool Lexer::isAtEnd()
+{
     return current >= source.size();
 }
 
-char Lexer::peek() {
-    if (isAtEnd()) return '\0';
+char Lexer::peek()
+{
+    if (isAtEnd())
+        return '\0';
     return source[current];
 }
 
-bool Lexer::match(char expected) {
-    if (isAtEnd()) return false;
-    if (source[current] != expected) return false;
+bool Lexer::match(char expected)
+{
+    if (isAtEnd())
+        return false;
+    if (source[current] != expected)
+        return false;
     current++;
     return true;
 }
@@ -136,42 +218,49 @@ void Lexer::addToken(TokenType type)
     advance();
 }
 
-Token Lexer::string() {
+Token Lexer::string()
+{
     std::string lexeme;
-    advance();  // Skip opening quote
-    while (!isAtEnd() && currentChar() != '"') {
+    advance(); // Skip opening quote
+    while (!isAtEnd() && currentChar() != '"')
+    {
         lexeme += currentChar();
         advance();
     }
-    advance();  // Skip closing quote
-    
+    advance(); // Skip closing quote
+
     Token token;
     token.type = TokenType::STRING;
     token.lexeme = lexeme;
     return token;
 }
 
-Token Lexer::number() {
+Token Lexer::number()
+{
     std::string lexeme;
-    
+
     // Handle negative sign
-    if (currentChar() == '-') {
+    if (currentChar() == '-')
+    {
         lexeme += '-';
         advance();
     }
-    
+
     // Collect digits before decimal point
-    while (!isAtEnd() && std::isdigit(currentChar())) {
+    while (!isAtEnd() && std::isdigit(currentChar()))
+    {
         lexeme += currentChar();
         advance();
     }
-    
+
     // Handle decimal point
-    if (!isAtEnd() && currentChar() == '.') {
+    if (!isAtEnd() && currentChar() == '.')
+    {
         lexeme += '.';
         advance();
-        
-        while (!isAtEnd() && std::isdigit(currentChar())) {
+
+        while (!isAtEnd() && std::isdigit(currentChar()))
+        {
             lexeme += currentChar();
             advance();
         }
@@ -183,13 +272,15 @@ Token Lexer::number() {
     return token;
 }
 
-Token Lexer::identifier() {
+Token Lexer::identifier()
+{
     std::string lexeme;
-    while (!isAtEnd() && (std::isalnum(currentChar()) || currentChar() == '_')) {
+    while (!isAtEnd() && (std::isalnum(currentChar()) || currentChar() == '_'))
+    {
         lexeme += currentChar();
         advance();
     }
-    
+
     auto it = keywords.find(lexeme);
     TokenType type = (it != keywords.end()) ? it->second : TokenType::IDENTIFIER;
 
@@ -220,12 +311,15 @@ void Lexer::scanToken()
         addToken(TokenType::DOT);
         break;
     case '-':
-        if (current + 1 < source.size() && std::isdigit(source[current + 1])) {
+        if (current + 1 < source.size() && std::isdigit(source[current + 1]))
+        {
             // This is a negative number
             tokens.push_back(Token(TokenType::MINUS, "-", "", line));
-            advance();  // Move past the minus sign
+            advance(); // Move past the minus sign
             tokens.push_back(number());
-        } else {
+        }
+        else
+        {
             addToken(TokenType::MINUS);
         }
         break;

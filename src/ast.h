@@ -43,6 +43,19 @@ public:
     }
 };
 
+class BooleanExpr : public Expr
+{
+public:
+    bool value;
+
+    BooleanExpr(bool value) : value(value) {}
+
+    void accept(Visitor *visitor) override
+    {
+        visitor->visit(this);
+    }
+};
+
 class StringExpr : public Expr
 {
 public:

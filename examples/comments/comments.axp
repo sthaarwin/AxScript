@@ -1,0 +1,28 @@
+// This is a single-line comment
+var x = 42; // Variable declaration with a comment at the end
+
+/* This is a multi-line comment
+   that spans multiple lines
+   and explains something important */
+print "Multi-line comments work!\n";
+
+var y = 10;
+
+/* You can also use multi-line comments
+   to temporarily disable code
+   var z = 20;
+   print z;
+*/
+
+print x + "\n"; // Should print 42
+
+// The next line prints the value of y
+print y + "\n"; // Should print 10
+
+/* 
+ * This is another style of multi-line comment
+ * that is commonly used for documentation
+ * with asterisks on each line
+ */
+ 
+print "Program completed successfully!\n";

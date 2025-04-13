@@ -8,15 +8,15 @@
 
 class Environment{
     private:
-        std::unordered_map<std::string, std::variant<double, std::string>> values;
+        std::unordered_map<std::string, std::variant<double, std::string, bool>> values;
     
     public:
         
-        void define(const std::string& name, std::variant<double, std::string> value){
-            values[name] =  value;
+        void define(const std::string& name, std::variant<double, std::string, bool> value){
+            values[name] = value;
         }
 
-        std::variant<double, std::string>get(const std::string& name){
+        std::variant<double, std::string, bool> get(const std::string& name){
             if(values.find(name) != values.end()){
                 return values[name];
             }
@@ -27,7 +27,7 @@ class Environment{
             return values.find(name) != values.end();
         }
 
-        void assign(const std::string& name, std::variant<double, std::string> value) {
+        void assign(const std::string& name, std::variant<double, std::string, bool> value) {
             if (values.find(name) != values.end()) {
                 values[name] = value;
             } else {

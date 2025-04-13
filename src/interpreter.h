@@ -13,7 +13,7 @@
 class Interpreter : public Visitor
 {
 private:
-    std::variant<double, std::string> result;
+    std::variant<double, std::string, bool> result;
     Environment environment;
     bool breakEncountered = false;
     bool continueEncountered = false;
@@ -33,6 +33,11 @@ public:
     }
 
     void visit(StringExpr *expr) override
+    {
+        result = expr->value;
+    }
+    
+    void visit(BooleanExpr *expr) override
     {
         result = expr->value;
     }
@@ -60,53 +65,121 @@ public:
         {
         case TokenType::PLUS:
             if (leftValue.index() == 1 || rightValue.index() == 1) {
-                // String concatenation
-                std::string leftStr = (leftValue.index() == 1) ? 
-                    std::get<std::string>(leftValue) : 
-                    std::to_string(std::get<double>(leftValue));
+                // String concatenation - strings are at index 1
+                std::string leftStr;
+                if (leftValue.index() == 0) {
+                    leftStr = std::to_string(std::get<double>(leftValue));
+                } else if (leftValue.index() == 1) {
+                    leftStr = std::get<std::string>(leftValue);
+                } else if (leftValue.index() == 2) {
+                    leftStr = std::get<bool>(leftValue) ? "true" : "false";
+                }
                 
-                std::string rightStr = (rightValue.index() == 1) ? 
-                    std::get<std::string>(rightValue) : 
-                    std::to_string(std::get<double>(rightValue));
+                std::string rightStr;
+                if (rightValue.index() == 0) {
+                    rightStr = std::to_string(std::get<double>(rightValue));
+                } else if (rightValue.index() == 1) {
+                    rightStr = std::get<std::string>(rightValue);
+                } else if (rightValue.index() == 2) {
+                    rightStr = std::get<bool>(rightValue) ? "true" : "false";
+                }
                 
                 result = leftStr + rightStr;
-            } else {
+            } else if (leftValue.index() == 0 && rightValue.index() == 0) {
+                // Numeric addition
                 result = std::get<double>(leftValue) + std::get<double>(rightValue);
+            } else {
+                throw std::runtime_error("Operands must be two numbers or at least one string.");
             }
             break;
         case TokenType::MINUS:
+            checkNumberOperands(expr->op, leftValue, rightValue);
             result = std::get<double>(leftValue) - std::get<double>(rightValue);
             break;
         case TokenType::STAR:
+            checkNumberOperands(expr->op, leftValue, rightValue);
             result = std::get<double>(leftValue) * std::get<double>(rightValue);
             break;
         case TokenType::SLASH:
+            checkNumberOperands(expr->op, leftValue, rightValue);
             if (std::get<double>(rightValue) == 0) {
                 throw std::runtime_error("Error: Division by zero");
             }
             result = std::get<double>(leftValue) / std::get<double>(rightValue);
             break;
         case TokenType::GREATER:
-            result = static_cast<double>(std::get<double>(leftValue) > std::get<double>(rightValue));
+            if (leftValue.index() == 0 && rightValue.index() == 0) {
+                result = std::get<double>(leftValue) > std::get<double>(rightValue);
+            } else if (leftValue.index() == 1 && rightValue.index() == 1) {
+                result = std::get<std::string>(leftValue) > std::get<std::string>(rightValue);
+            } else {
+                throw std::runtime_error("Operands must be two numbers or two strings.");
+            }
             break;
         case TokenType::GREATER_EQUAL:
-            result = static_cast<double>(std::get<double>(leftValue) >= std::get<double>(rightValue));
+            if (leftValue.index() == 0 && rightValue.index() == 0) {
+                result = std::get<double>(leftValue) >= std::get<double>(rightValue);
+            } else if (leftValue.index() == 1 && rightValue.index() == 1) {
+                result = std::get<std::string>(leftValue) >= std::get<std::string>(rightValue);
+            } else {
+                throw std::runtime_error("Operands must be two numbers or two strings.");
+            }
             break;
         case TokenType::LESS:
-            result = static_cast<double>(std::get<double>(leftValue) < std::get<double>(rightValue));
+            if (leftValue.index() == 0 && rightValue.index() == 0) {
+                result = std::get<double>(leftValue) < std::get<double>(rightValue);
+            } else if (leftValue.index() == 1 && rightValue.index() == 1) {
+                result = std::get<std::string>(leftValue) < std::get<std::string>(rightValue);
+            } else {
+                throw std::runtime_error("Operands must be two numbers or two strings.");
+            }
             break;
         case TokenType::LESS_EQUAL:
-            result = static_cast<double>(std::get<double>(leftValue) <= std::get<double>(rightValue));
+            if (leftValue.index() == 0 && rightValue.index() == 0) {
+                result = std::get<double>(leftValue) <= std::get<double>(rightValue);
+            } else if (leftValue.index() == 1 && rightValue.index() == 1) {
+                result = std::get<std::string>(leftValue) <= std::get<std::string>(rightValue);
+            } else {
+                throw std::runtime_error("Operands must be two numbers or two strings.");
+            }
             break;
         case TokenType::EQUAL_EQUAL:
-            result = static_cast<double>(std::get<double>(leftValue) == std::get<double>(rightValue));
+            result = isEqual(leftValue, rightValue);
             break;
         case TokenType::BANG_EQUAL:
-            result = static_cast<double>(std::get<double>(leftValue) != std::get<double>(rightValue));
+            result = !isEqual(leftValue, rightValue);
             break;
         default:
             throw std::runtime_error("Invalid binary operator");
         }
+    }
+
+    // Helper for boolean equality comparison
+    bool isEqual(const std::variant<double, std::string, bool>& a, 
+                 const std::variant<double, std::string, bool>& b) {
+        // Different types are never equal
+        if (a.index() != b.index()) return false;
+        
+        // Same type comparison
+        switch (a.index()) {
+            case 0: // double
+                return std::get<double>(a) == std::get<double>(b);
+            case 1: // string
+                return std::get<std::string>(a) == std::get<std::string>(b);
+            case 2: // boolean
+                return std::get<bool>(a) == std::get<bool>(b);
+            default:
+                return false;
+        }
+    }
+
+    // Helper to check number operands
+    void checkNumberOperands(const Token& op, 
+                            const std::variant<double, std::string, bool>& left,
+                            const std::variant<double, std::string, bool>& right) {
+        if (left.index() == 0 && right.index() == 0) return;
+        throw std::runtime_error(std::string("Operands must be numbers for operator '") + 
+                                op.lexeme + "'.");
     }
 
     void visit(PrintStmt *stmt) override
@@ -116,6 +189,8 @@ public:
             std::string output;
             if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, std::string>) {
                 output = arg;
+            } else if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, bool>) {
+                output = arg ? "true" : "false";
             } else {
                 // Format number with better precision
                 double value = arg;
@@ -164,7 +239,7 @@ public:
 
     void visit(VarStmt *stmt) override
     {
-        std::variant<double, std::string> value;
+        std::variant<double, std::string, bool> value;
         if (stmt->initializer != nullptr)
         {
             stmt->initializer->accept(this);
@@ -191,17 +266,42 @@ public:
             if (pos == input.length()) {
                 environment.define(stmt->variableName.lexeme, value);
             } else {
-                environment.define(stmt->variableName.lexeme, input);
+                // Check for boolean values
+                if (input == "true") {
+                    environment.define(stmt->variableName.lexeme, true);
+                } else if (input == "false") {
+                    environment.define(stmt->variableName.lexeme, false);
+                } else {
+                    environment.define(stmt->variableName.lexeme, input);
+                }
             }
         }
         catch (const std::invalid_argument&) {
-            // Not a number
-            environment.define(stmt->variableName.lexeme, input);
+            // Check for boolean values
+            if (input == "true") {
+                environment.define(stmt->variableName.lexeme, true);
+            } else if (input == "false") {
+                environment.define(stmt->variableName.lexeme, false);
+            } else {
+                // Not a number or boolean, treat as string
+                environment.define(stmt->variableName.lexeme, input);
+            }
         }
         catch (const std::out_of_range&) {
             // Number out of range
             std::cerr << "Warning: Number out of range, treating as string" << std::endl;
             environment.define(stmt->variableName.lexeme, input);
+        }
+    }
+    
+    // Helper to check if a value is truthy
+    bool isTruthy(const std::variant<double, std::string, bool>& value) {
+        if (value.index() == 2) { // boolean
+            return std::get<bool>(value);
+        } else if (value.index() == 0) { // number
+            return std::get<double>(value) != 0.0;
+        } else { // string
+            return !std::get<std::string>(value).empty();
         }
     }
 
@@ -213,22 +313,12 @@ public:
         stmt->right->accept(this);
         auto rightValue = result;
         
-        bool isEqual = false;
-        
-        // Check if both are the same type
-        if (leftValue.index() == rightValue.index()) {
-            if (leftValue.index() == 0) { // Both are numbers
-                isEqual = std::get<double>(leftValue) == std::get<double>(rightValue);
-            } else { // Both are strings
-                isEqual = std::get<std::string>(leftValue) == std::get<std::string>(rightValue);
-            }
-        }
-        
-        result = static_cast<double>(isEqual);
+        bool isEqual = this->isEqual(leftValue, rightValue);
+        result = isEqual; // Store as boolean directly
         
         if (isEqual && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
-            return; // Return after executing then branch
+            return;
         } 
         
         if (!isEqual && stmt->elseBranch) {
@@ -244,28 +334,15 @@ public:
         stmt->right->accept(this);
         auto rightValue = result;
         
-        bool isNotEqual = false;
+        // Use the isEqual helper and negate the result
+        bool isNotEqual = !isEqual(leftValue, rightValue);
+        // Store the boolean value
+        result = isNotEqual;
         
-        // Check if both are the same type
-        if (leftValue.index() == rightValue.index()) {
-            if (leftValue.index() == 0) { // Both are numbers
-                isNotEqual = std::get<double>(leftValue) != std::get<double>(rightValue);
-            } else { // Both are strings
-                isNotEqual = std::get<std::string>(leftValue) != std::get<std::string>(rightValue);
-            }
-        } else {
-            // Different types are always not equal
-            isNotEqual = true;
-        }
-        
-        result = static_cast<double>(isNotEqual);
-        
+        // Execute the appropriate branch
         if (isNotEqual && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
-            return; // Return after executing then branch
-        }
-        
-        if (!isNotEqual && stmt->elseBranch) {
+        } else if (!isNotEqual && stmt->elseBranch) {
             stmt->elseBranch->accept(this);
         }
     }
@@ -280,16 +357,19 @@ public:
         
         bool isGreaterEqual = false;
         
-        // Handle string comparison if both values are strings
-        if (leftValue.index() == 1 && rightValue.index() == 1) {
-            isGreaterEqual = std::get<std::string>(leftValue) >= std::get<std::string>(rightValue);
-        } 
-        // Handle numeric comparison
-        else if (leftValue.index() == 0 && rightValue.index() == 0) {
-            isGreaterEqual = std::get<double>(leftValue) >= std::get<double>(rightValue);
+        // Handle comparisons based on types
+        if (leftValue.index() == rightValue.index()) {
+            if (leftValue.index() == 0) { // numbers
+                isGreaterEqual = std::get<double>(leftValue) >= std::get<double>(rightValue);
+            } else if (leftValue.index() == 1) { // strings
+                isGreaterEqual = std::get<std::string>(leftValue) >= std::get<std::string>(rightValue);
+            } else if (leftValue.index() == 2) { // booleans
+                // For booleans: true >= true, true >= false, false >= false
+                isGreaterEqual = !std::get<bool>(leftValue) || std::get<bool>(rightValue);
+            }
         }
         
-        result = static_cast<double>(isGreaterEqual);
+        result = isGreaterEqual; // Store result directly as a boolean
         
         if (isGreaterEqual && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
@@ -311,16 +391,19 @@ public:
         
         bool isLessEqual = false;
         
-        // Handle string comparison if both values are strings
-        if (leftValue.index() == 1 && rightValue.index() == 1) {
-            isLessEqual = std::get<std::string>(leftValue) <= std::get<std::string>(rightValue);
-        }
-        // Handle numeric comparison
-        else if (leftValue.index() == 0 && rightValue.index() == 0) {
-            isLessEqual = std::get<double>(leftValue) <= std::get<double>(rightValue);
+        // Handle comparisons based on types
+        if (leftValue.index() == rightValue.index()) {
+            if (leftValue.index() == 0) { // numbers
+                isLessEqual = std::get<double>(leftValue) <= std::get<double>(rightValue);
+            } else if (leftValue.index() == 1) { // strings
+                isLessEqual = std::get<std::string>(leftValue) <= std::get<std::string>(rightValue);
+            } else if (leftValue.index() == 2) { // booleans
+                // For booleans: false <= false, false <= true, true <= true
+                isLessEqual = std::get<bool>(leftValue) <= std::get<bool>(rightValue);
+            }
         }
         
-        result = static_cast<double>(isLessEqual);
+        result = isLessEqual; // Store as a boolean directly
         
         if (isLessEqual && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
@@ -342,52 +425,26 @@ public:
         
         bool isGreater = false;
         
-        // Handle string comparison if both values are strings
-        if (leftValue.index() == 1 && rightValue.index() == 1) {
-            isGreater = std::get<std::string>(leftValue) > std::get<std::string>(rightValue);
-        }
-        // Handle numeric comparison
-        else if (leftValue.index() == 0 && rightValue.index() == 0) {
-            isGreater = std::get<double>(leftValue) > std::get<double>(rightValue);
+        // Handle comparisons based on types
+        if (leftValue.index() == rightValue.index()) {
+            if (leftValue.index() == 0) { // numbers
+                isGreater = std::get<double>(leftValue) > std::get<double>(rightValue);
+            } else if (leftValue.index() == 1) { // strings
+                isGreater = std::get<std::string>(leftValue) > std::get<std::string>(rightValue);
+            } else if (leftValue.index() == 2) { // booleans
+                // For booleans: true > false, but not false > true or others
+                isGreater = std::get<bool>(leftValue) && !std::get<bool>(rightValue);
+            }
         }
         
-        result = static_cast<double>(isGreater);
+        result = isGreater; // Store boolean result
         
         if (isGreater && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
             return;
         }
         
-        // Handle else-if branches
-        if (!isGreater && !stmt->elseIfBranches.empty()) {
-            for (const auto& elseIfPair : stmt->elseIfBranches) {
-                // Try to execute as AndConditionStmt first
-                if (auto andCondition = dynamic_cast<AndConditionStmt*>(elseIfPair.first.get())) {
-                    bool allTrue = true;
-                    for (const auto& condition : andCondition->conditions) {
-                        condition->accept(this);
-                        if (std::get<double>(result) == 0.0) {
-                            allTrue = false;
-                            break;
-                        }
-                    }
-                    if (allTrue) {
-                        elseIfPair.second->accept(this);
-                        return;
-                    }
-                } 
-                // Regular condition
-                else {
-                    elseIfPair.first->accept(this);
-                    if (std::get<double>(result) != 0.0) {
-                        elseIfPair.second->accept(this);
-                        return;
-                    }
-                }
-            }
-        }
-        
-        // If no conditions matched, execute else branch
+        // Handle else branch if not greater
         if (!isGreater && stmt->elseBranch) {
             stmt->elseBranch->accept(this);
         }
@@ -403,20 +460,23 @@ public:
         
         bool isLess = false;
         
-        // Handle string comparison if both values are strings
-        if (leftValue.index() == 1 && rightValue.index() == 1) {
-            isLess = std::get<std::string>(leftValue) < std::get<std::string>(rightValue);
-        }
-        // Handle numeric comparison
-        else if (leftValue.index() == 0 && rightValue.index() == 0) {
-            isLess = std::get<double>(leftValue) < std::get<double>(rightValue);
+        // Handle comparisons based on types
+        if (leftValue.index() == rightValue.index()) {
+            if (leftValue.index() == 0) { // numbers
+                isLess = std::get<double>(leftValue) < std::get<double>(rightValue);
+            } else if (leftValue.index() == 1) { // strings
+                isLess = std::get<std::string>(leftValue) < std::get<std::string>(rightValue);
+            } else if (leftValue.index() == 2) { // booleans
+                // For booleans: false < true, but not others
+                isLess = !std::get<bool>(leftValue) && std::get<bool>(rightValue);
+            }
         }
         
-        result = static_cast<double>(isLess);
+        result = isLess; // Store as boolean directly
         
         if (isLess && stmt->thenBranch) {
             stmt->thenBranch->accept(this);
-            return; // Return after executing then branch
+            return;
         }
         
         if (!isLess && stmt->elseBranch) {
@@ -633,18 +693,25 @@ public:
         expr->right->accept(this);
         auto rightValue = result;
         
-        bool isEqual = false;
+        // Perform equality check without calling isEqual to avoid recursion
+        bool equal = false;
         
-        // Handle equality based on the type of operands
+        // First check if types match
         if (leftValue.index() == rightValue.index()) {
-            if (leftValue.index() == 0) { // Both are numbers
-                isEqual = std::get<double>(leftValue) == std::get<double>(rightValue);
-            } else { // Both are strings
-                isEqual = std::get<std::string>(leftValue) == std::get<std::string>(rightValue);
+            switch (leftValue.index()) {
+                case 0: // double
+                    equal = std::get<double>(leftValue) == std::get<double>(rightValue);
+                    break;
+                case 1: // string
+                    equal = std::get<std::string>(leftValue) == std::get<std::string>(rightValue);
+                    break;
+                case 2: // boolean
+                    equal = std::get<bool>(leftValue) == std::get<bool>(rightValue);
+                    break;
             }
         }
         
-        result = static_cast<double>(isEqual);
+        result = equal;
     }
 
     void visit(AndConditionStmt* stmt) override {
@@ -652,14 +719,10 @@ public:
         
         bool allTrue = true;
         for (const auto& condition : stmt->conditions) {
-            if (auto exprStmt = dynamic_cast<ExpressionStmt*>(condition.get())) {
-                if (auto compEqExpr = dynamic_cast<CompEqExpr*>(exprStmt->expression.get())) {
-                    compEqExpr->accept(this);
-                    if (std::get<double>(result) == 0.0) {
-                        allTrue = false;
-                        break;
-                    }
-                }
+            condition->accept(this);
+            if (!isTruthy(result)) {
+                allTrue = false;
+                break;
             }
         }
         
@@ -669,7 +732,7 @@ public:
             stmt->elseBranch->accept(this);
         }
         
-        result = static_cast<double>(allTrue); // Store the overall result
+        result = allTrue; // Store result as boolean
     }
 
     void visit(OrConditionStmt* stmt) override {
@@ -677,14 +740,10 @@ public:
         
         bool anyTrue = false;
         for (const auto& condition : stmt->conditions) {
-            if (auto exprStmt = dynamic_cast<ExpressionStmt*>(condition.get())) {
-                if (auto compEqExpr = dynamic_cast<CompEqExpr*>(exprStmt->expression.get())) {
-                    compEqExpr->accept(this);
-                    if (std::get<double>(result) != 0.0) {
-                        anyTrue = true;
-                        break;
-                    }
-                }
+            condition->accept(this);
+            if (isTruthy(result)) {
+                anyTrue = true;
+                break;
             }
         }
         
@@ -694,7 +753,7 @@ public:
             stmt->elseBranch->accept(this);
         }
         
-        result = static_cast<double>(anyTrue); // Store the overall result
+        result = anyTrue; // Store result as boolean
     }
 
     void interpret(const std::vector<std::unique_ptr<Stmt>> &statements)

@@ -8,7 +8,7 @@ Current features include:
 - Variable declarations and initialization
 - Basic arithmetic operations (+, -, *, /)
 - Print statements
-- Number and string literals
+- Number, string, and boolean literals
 - User input
 - Control flow
 - Loops
@@ -17,6 +17,7 @@ Current features include:
 - Logical operations (AND, OR)
 - Comparison with else branches
 - Short-circuit evaluation for logical operations
+- Boolean data type (true/false)
 
 Example code:
 ```
@@ -52,6 +53,21 @@ comple (num, 5) {
 }
 print "end";
 ```
+
+```
+// Boolean example
+var isTrue = true;
+var isFalse = false;
+
+compeq (isTrue, true) {
+    print "isTrue is true";
+}
+
+compeq (isFalse, false) {
+    print "isFalse is false";
+}
+```
+
 ```
 loop i = 1 to 5 {
     print i;
@@ -293,12 +309,12 @@ The examples are organized into three main categories:
 - [x] Control flow (comparison statements)
 - [x] Loops
 - [x] Logical operations
+- [x] Boolean data type
 - [ ] Functions
-- [ ] More data types (boolean, arrays)
+- [ ] More data types (arrays)
 - [ ] Standard library
 - [ ] Better error messages
 - [ ] Code optimization
-
 
 ## Acknowledgments
 

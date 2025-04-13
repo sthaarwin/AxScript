@@ -1,0 +1,4 @@
+var name;
+print " Enter your name  : ";
+input name;
+print "hi " + name + "!!! \n";

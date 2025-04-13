@@ -1,0 +1,9 @@
+var ans;
+print "enter a : ";
+input ans;
+compeq(ans, "a"){
+    print "yes";
+}
+else{
+    print "no";
+}

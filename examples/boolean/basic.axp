@@ -1,0 +1,55 @@
+// Basic boolean tests
+var myTrue = true;
+var myFalse = false;
+
+print "Boolean literals:\n";
+print "myTrue = ";
+print myTrue;
+print "\n";
+print "myFalse = ";
+print myFalse;
+print "\n\n";
+
+print "Equality comparisons:\n";
+compeq(true, true) {
+    print "true equals true\n";
+}
+
+compeq(false, false) {
+    print "false equals false\n";
+}
+
+compneq(true, false) {
+    print "true not equal to false\n";
+}
+
+print "\n";
+
+print "Boolean in conditional statements:\n";
+compeq(myTrue, true) {
+    print "myTrue is indeed true\n";
+}
+
+print "\n";
+print "Boolean concatenation with strings:\n";
+print "Boolean true as string: " + true + "\n";
+print "Boolean false as string: " + false + "\n";
+
+var result = myTrue;
+print "\nStored in variables:\n";
+print "result = ";
+print result;
+print "\n";
+
+// Test logical operations
+var a = true;
+var b = false;
+
+print "\nLogical operations:\n";
+compeq(a, true) and compeq(b, false) {
+    print "AND operation works correctly\n";
+}
+
+compeq(a, true) or compeq(b, true) {
+    print "OR operation works correctly\n";
+}

@@ -1,0 +1,51 @@
+// Incremental boolean tests
+var myTrue = true;
+var myFalse = false;
+
+print "Boolean literals:\n";
+print "myTrue = ";
+print myTrue;
+print "\n";
+print "myFalse = ";
+print myFalse;
+print "\n\n";
+
+print "Equality comparisons:\n";
+compeq(true, true) {
+    print "true equals true\n";
+}
+
+compeq(false, false) {
+    print "false equals false\n";
+}
+
+print "\n";
+
+// Test boolean in conditional statements
+print "Boolean in conditional statements:\n";
+compeq(myTrue, true) {
+    print "myTrue is indeed true\n";
+}
+
+// Test string concatenation with booleans
+print "\nBoolean concatenation with strings:\n";
+print "Boolean true as string: " + true + "\n";
+print "Boolean false as string: " + false + "\n";
+
+// Test assignment to variables
+var result = myTrue;
+print "\nStored in variables:\n";
+print "result = ";
+print result;
+print "\n";
+
+// Test basic logical operations
+var a = true;
+var b = false;
+
+print "\nLogical operations with AND:\n";
+compeq(a, true) {
+    compeq(b, false) {
+        print "Nested conditions work correctly\n";
+    }
+}

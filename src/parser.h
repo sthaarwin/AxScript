@@ -607,6 +607,14 @@ private:
 
     std::unique_ptr<Expr> primary()
     {
+        if (match({TokenType::TRUE})) {
+            return std::make_unique<BooleanExpr>(true);
+        }
+        
+        if (match({TokenType::FALSE})) {
+            return std::make_unique<BooleanExpr>(false);
+        }
+        
         if (match({TokenType::MINUS})) {
             if (match({TokenType::NUMBER})) {
                 std::string numStr = "-" + previous().lexeme;

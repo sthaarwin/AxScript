@@ -1,0 +1,20 @@
+// Simple boolean test
+var myTrue = true;
+var myFalse = false;
+
+print "Boolean literals:\n";
+print "myTrue = ";
+print myTrue;
+print "\n";
+print "myFalse = ";
+print myFalse;
+print "\n\n";
+
+print "Equality comparisons:\n";
+compeq(true, true) {
+    print "true equals true\n";
+}
+
+compeq(false, false) {
+    print "false equals false\n";
+}
