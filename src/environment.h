@@ -17,27 +17,19 @@ struct ValueImpl {
     enum class Type { NUMBER, STRING, BOOLEAN, ARRAY };
     Type type;
 
-    // Data storage
-    union {
-        double numberVal;
-        bool boolVal;
-    };
+    // Use separate variables instead of a union with manual destruction
+    double numberVal;
+    bool boolVal;
     std::string stringVal;
     std::vector<Value> arrayVal;
 
     // Constructors for each type
-    ValueImpl(double val) : type(Type::NUMBER), numberVal(val) {}
-    ValueImpl(const std::string& val) : type(Type::STRING), stringVal(val) {}
-    ValueImpl(bool val) : type(Type::BOOLEAN), boolVal(val) {}
-    ValueImpl(const std::vector<Value>& val) : type(Type::ARRAY), arrayVal(val) {}
+    ValueImpl(double val) : type(Type::NUMBER), numberVal(val), boolVal(false) {}
+    ValueImpl(const std::string& val) : type(Type::STRING), numberVal(0), boolVal(false), stringVal(val) {}
+    ValueImpl(bool val) : type(Type::BOOLEAN), numberVal(0), boolVal(val) {}
+    ValueImpl(const std::vector<Value>& val) : type(Type::ARRAY), numberVal(0), boolVal(false), arrayVal(val) {}
 
-    ~ValueImpl() {
-        if (type == Type::STRING) {
-            stringVal.~basic_string();
-        } else if (type == Type::ARRAY) {
-            arrayVal.~vector();
-        }
-    }
+    // No need for a custom destructor - let the compiler handle it properly
 };
 
 // Helper functions to create Values of different types
