@@ -31,8 +31,8 @@ Lexer::Lexer(const std::string source) : source(source), current(0), line(1)
     keywords["and"] = TokenType::AND;
     keywords["not"] = TokenType::NOT;
     keywords["true"] = TokenType::TRUE;
+    keywords["return"] = TokenType::RETURN_KW;
     // keywords["fun"] = TokenType::FUN;
-    // keywords["return"] = TokenType::RETURN;
     // keywords["super"] = TokenType::SUPER;
     // keywords["this"] = TokenType::THIS;
     // keywords["while"] = TokenType::WHILE;
@@ -107,6 +107,10 @@ TokenType Lexer::identifyToken(char ch)
         return TokenType::LEFT_BRACE;
     case '}':
         return TokenType::RIGHT_BRACE;
+    case '[':
+        return TokenType::LEFT_BRACKET;
+    case ']':
+        return TokenType::RIGHT_BRACKET;
     case ',':
         return TokenType::COMMA;
     case '.':
@@ -303,6 +307,12 @@ void Lexer::scanToken()
         break;
     case '}':
         addToken(TokenType::RIGHT_BRACE);
+        break;
+    case '[':
+        addToken(TokenType::LEFT_BRACKET);
+        break;
+    case ']':
+        addToken(TokenType::RIGHT_BRACKET);
         break;
     case ',':
         addToken(TokenType::COMMA);

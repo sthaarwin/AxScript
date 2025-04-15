@@ -8,6 +8,8 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::RIGHT_PAREN: return ")";
         case TokenType::LEFT_BRACE: return "{";
         case TokenType::RIGHT_BRACE: return "}";
+        case TokenType::LEFT_BRACKET: return "[";
+        case TokenType::RIGHT_BRACKET: return "]";
         case TokenType::COMMA: return ",";
         case TokenType::DOT: return ".";
         case TokenType::MINUS: return "-";
@@ -38,7 +40,7 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::OR: return "OR";
         case TokenType::NOT: return "NOT";
         case TokenType::PRINT: return "PRINT";
-        case TokenType::RETURN: return "RETURN";
+        case TokenType::RETURN_KW: return "RETURN";
         case TokenType::SUPER: return "SUPER";
         case TokenType::THIS: return "THIS";
         case TokenType::TRUE: return "TRUE";
@@ -49,6 +51,7 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::DOWN: return "DOWN";
         case TokenType::TO: return "TO";
         case TokenType::STEP: return "STEP";
+        case TokenType::LOOP: return "LOOP";
         case TokenType::COMPEQ: return "COMPEQ";
         case TokenType::COMPNEQ: return "COMPNEQ";
         case TokenType::COMPGE: return "COMPGE";

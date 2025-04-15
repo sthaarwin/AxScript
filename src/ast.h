@@ -108,6 +108,45 @@ public:
     }
 };
 
+class ArrayExpr : public Expr {
+public:
+    std::vector<std::unique_ptr<Expr>> elements;
+
+    ArrayExpr(std::vector<std::unique_ptr<Expr>>&& elements) 
+        : elements(std::move(elements)) {}
+
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class IndexExpr : public Expr {
+public:
+    std::unique_ptr<Expr> object;
+    std::unique_ptr<Expr> index;
+
+    IndexExpr(std::unique_ptr<Expr> object, std::unique_ptr<Expr> index)
+        : object(std::move(object)), index(std::move(index)) {}
+
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class AssignIndexExpr : public Expr {
+public:
+    std::unique_ptr<Expr> object;
+    std::unique_ptr<Expr> index;
+    std::unique_ptr<Expr> value;
+
+    AssignIndexExpr(std::unique_ptr<Expr> object, std::unique_ptr<Expr> index, std::unique_ptr<Expr> value)
+        : object(std::move(object)), index(std::move(index)), value(std::move(value)) {}
+
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
 class Stmt
 {
 public:

@@ -1,0 +1,37 @@
+var mixedArray = [1, 2, "hello", true, 3.14];
+
+print "The array contains: ";
+print mixedArray;
+print "\n\n";
+
+print "First element: ";
+print mixedArray[0];
+print "\nThird element: ";
+print mixedArray[2];
+print "\n\n";
+
+print "Modifying the array...\n";
+mixedArray[1] = 200;
+mixedArray[2] = "world";
+
+print "Updated array: ";
+print mixedArray;
+print "\n\n";
+
+var numbers = [10, 20, 30, 40, 50];
+print "Looping through array elements:\n";
+loop i = 0 to 4 {
+    print "Element ";
+    print i;
+    print ": ";
+    print numbers[i];
+    print "\n";
+}
+
+var array1 = [1, 2, 3];
+var array2 = [4, 5, 6];
+var combined = array1 + array2;
+
+print "\nCombined arrays: ";
+print combined;
+print "\n";

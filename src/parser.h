@@ -534,6 +534,13 @@ private:
             if (auto* varExpr = dynamic_cast<VariableExpr*>(expr.get())) {
                 Token name = varExpr->name;
                 return std::make_unique<AssignExpr>(name, std::move(value));
+            } else if (auto* indexExpr = dynamic_cast<IndexExpr*>(expr.get())) {
+                // Handle assigning to array index: arr[idx] = value
+                return std::make_unique<AssignIndexExpr>(
+                    std::move(indexExpr->object),
+                    std::move(indexExpr->index),
+                    std::move(value)
+                );
             }
 
             throw std::runtime_error("Invalid assignment target.");
@@ -593,12 +600,12 @@ private:
 
     std::unique_ptr<Expr> factor()
     {
-        auto expr = primary();
+        auto expr = unary();
 
         while (match({TokenType::SLASH, TokenType::STAR}))
         {
             Token op = previous();
-            auto right = primary();
+            auto right = unary();
             expr = std::make_unique<BinaryExpr>(std::move(expr), op, std::move(right));
         }
 
@@ -644,7 +651,46 @@ private:
             consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.");
             return expr;
         }
+        
+        // Handle array literals
+        if (match({TokenType::LEFT_BRACKET})) {
+            std::vector<std::unique_ptr<Expr>> elements;
+            
+            // Check for empty array first
+            if (!check(TokenType::RIGHT_BRACKET)) {
+                do {
+                    elements.push_back(expression());
+                } while (match({TokenType::COMMA}));
+            }
+            
+            consume(TokenType::RIGHT_BRACKET, "Expect ']' after array elements.");
+            return std::make_unique<ArrayExpr>(std::move(elements));
+        }
+        
         throw std::runtime_error("Expect expression.");
+    }
+
+    // Add array indexing in the call/subscript precedence level between primary and unary
+    std::unique_ptr<Expr> call() {
+        auto expr = primary();
+        
+        while (true) {
+            if (match({TokenType::LEFT_BRACKET})) {
+                // Array indexing: array[index]
+                auto index = expression();
+                consume(TokenType::RIGHT_BRACKET, "Expect ']' after index.");
+                expr = std::make_unique<IndexExpr>(std::move(expr), std::move(index));
+            } else {
+                break;
+            }
+        }
+        
+        return expr;
+    }
+
+    std::unique_ptr<Expr> unary() {
+        // Call 'call()' instead of 'primary()' to handle array indexing
+        return call();
     }
 
     std::unique_ptr<Stmt> loopStatement()
@@ -783,7 +829,7 @@ private:
             case TokenType::IF:
             case TokenType::WHILE:
             case TokenType::PRINT:
-            case TokenType::RETURN:
+            case TokenType::RETURN_KW:
                 return;
             default:
                 advance();

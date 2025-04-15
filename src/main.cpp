@@ -4,6 +4,8 @@
 #include <string>
 #include <sstream>
 #include <cstdlib>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include "lexer.h"
 #include "tokens.h"
 #include "parser.h"
@@ -30,20 +32,40 @@ public:
     }
 
     static void runPrompt() {
+        // Initialize readline
+        using_history();
+        
+        std::string line;
         while (true) {
-            std::cout << ">> ";
-            std::string line;
-            if (!std::getline(std::cin, line)) {
+            // Use readline to get input with command history
+            char* lineRaw = readline(">> ");
+            
+            // Check for EOF (Ctrl+D) or nullptr
+            if (lineRaw == nullptr) {
+                std::cout << std::endl;
                 break;
             }
-
-            if (line.empty() || line == "exit") {
-                std::cout << "\nExiting!" << std::endl;
+            
+            line = lineRaw;
+            
+            // Add non-empty lines to history
+            if (!line.empty()) {
+                add_history(lineRaw);
+            }
+            
+            // Free memory allocated by readline
+            free(lineRaw);
+            
+            if (line == "exit") {
+                std::cout << "Exiting!" << std::endl;
                 break;
             }
-
+            
             run(line);
         }
+        
+        // Clean up history
+        clear_history();
     }
 
     static void run(const std::string& source) {

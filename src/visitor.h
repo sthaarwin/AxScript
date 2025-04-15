@@ -27,6 +27,9 @@ class CompLStmt;
 class AndConditionStmt;
 class OrConditionStmt;
 class AssignExpr;
+class ArrayExpr;
+class IndexExpr;
+class AssignIndexExpr;
 
 class Visitor {
 public:
@@ -56,6 +59,9 @@ public:
     virtual void visit(AndConditionStmt* stmt) = 0;
     virtual void visit(OrConditionStmt* stmt) = 0;
     virtual void visit(AssignExpr* expr) = 0;
+    virtual void visit(ArrayExpr* expr) = 0;
+    virtual void visit(IndexExpr* expr) = 0;
+    virtual void visit(AssignIndexExpr* expr) = 0;
 };
 
 #endif // VISITOR_H

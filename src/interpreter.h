@@ -6,14 +6,13 @@
 #include "ast.h"
 #include "environment.h"
 #include <iostream>
-#include <variant>
 #include <sstream>
 #include <iomanip>
 
 class Interpreter : public Visitor
 {
 private:
-    std::variant<double, std::string, bool> result;
+    Value result;
     Environment environment;
     bool breakEncountered = false;
     bool continueEncountered = false;
@@ -29,17 +28,17 @@ private:
 public:
     void visit(NumberExpr *expr) override
     {
-        result = expr->value;
+        result = makeNumber(expr->value);
     }
 
     void visit(StringExpr *expr) override
     {
-        result = expr->value;
+        result = makeString(expr->value);
     }
     
     void visit(BooleanExpr *expr) override
     {
-        result = expr->value;
+        result = makeBoolean(expr->value);
     }
 
     void visit(VariableExpr *expr) override
@@ -64,110 +63,543 @@ public:
         switch (expr->op.type)
         {
         case TokenType::PLUS:
-            if (leftValue.index() == 1 || rightValue.index() == 1) {
-                // String concatenation - strings are at index 1
-                std::string leftStr;
-                if (leftValue.index() == 0) {
-                    leftStr = std::to_string(std::get<double>(leftValue));
-                } else if (leftValue.index() == 1) {
-                    leftStr = std::get<std::string>(leftValue);
-                } else if (leftValue.index() == 2) {
-                    leftStr = std::get<bool>(leftValue) ? "true" : "false";
-                }
-                
-                std::string rightStr;
-                if (rightValue.index() == 0) {
-                    rightStr = std::to_string(std::get<double>(rightValue));
-                } else if (rightValue.index() == 1) {
-                    rightStr = std::get<std::string>(rightValue);
-                } else if (rightValue.index() == 2) {
-                    rightStr = std::get<bool>(rightValue) ? "true" : "false";
-                }
-                
-                result = leftStr + rightStr;
-            } else if (leftValue.index() == 0 && rightValue.index() == 0) {
+            if (isString(leftValue) || isString(rightValue)) {
+                // String concatenation - convert both operands to string
+                std::string leftStr = valueToString(leftValue);
+                std::string rightStr = valueToString(rightValue);
+                result = makeString(leftStr + rightStr);
+            } else if (isNumber(leftValue) && isNumber(rightValue)) {
                 // Numeric addition
-                result = std::get<double>(leftValue) + std::get<double>(rightValue);
+                result = makeNumber(asNumber(leftValue) + asNumber(rightValue));
+            } else if (isArray(leftValue) && isArray(rightValue)) {
+                // Array concatenation
+                auto resultArray = asArray(leftValue);
+                const auto& rightArray = asArray(rightValue);
+                resultArray.insert(resultArray.end(), rightArray.begin(), rightArray.end());
+                result = makeArray(resultArray);
             } else {
-                throw std::runtime_error("Operands must be two numbers or at least one string.");
+                throw std::runtime_error("Operands must be two numbers, two arrays, or at least one string.");
             }
             break;
         case TokenType::MINUS:
             checkNumberOperands(expr->op, leftValue, rightValue);
-            result = std::get<double>(leftValue) - std::get<double>(rightValue);
+            result = makeNumber(asNumber(leftValue) - asNumber(rightValue));
             break;
         case TokenType::STAR:
             checkNumberOperands(expr->op, leftValue, rightValue);
-            result = std::get<double>(leftValue) * std::get<double>(rightValue);
+            result = makeNumber(asNumber(leftValue) * asNumber(rightValue));
             break;
         case TokenType::SLASH:
             checkNumberOperands(expr->op, leftValue, rightValue);
-            if (std::get<double>(rightValue) == 0) {
+            if (asNumber(rightValue) == 0) {
                 throw std::runtime_error("Error: Division by zero");
             }
-            result = std::get<double>(leftValue) / std::get<double>(rightValue);
+            result = makeNumber(asNumber(leftValue) / asNumber(rightValue));
             break;
         case TokenType::GREATER:
-            if (leftValue.index() == 0 && rightValue.index() == 0) {
-                result = std::get<double>(leftValue) > std::get<double>(rightValue);
-            } else if (leftValue.index() == 1 && rightValue.index() == 1) {
-                result = std::get<std::string>(leftValue) > std::get<std::string>(rightValue);
+            if (isNumber(leftValue) && isNumber(rightValue)) {
+                result = makeBoolean(asNumber(leftValue) > asNumber(rightValue));
+            } else if (isString(leftValue) && isString(rightValue)) {
+                result = makeBoolean(asString(leftValue) > asString(rightValue));
             } else {
                 throw std::runtime_error("Operands must be two numbers or two strings.");
             }
             break;
         case TokenType::GREATER_EQUAL:
-            if (leftValue.index() == 0 && rightValue.index() == 0) {
-                result = std::get<double>(leftValue) >= std::get<double>(rightValue);
-            } else if (leftValue.index() == 1 && rightValue.index() == 1) {
-                result = std::get<std::string>(leftValue) >= std::get<std::string>(rightValue);
+            if (isNumber(leftValue) && isNumber(rightValue)) {
+                result = makeBoolean(asNumber(leftValue) >= asNumber(rightValue));
+            } else if (isString(leftValue) && isString(rightValue)) {
+                result = makeBoolean(asString(leftValue) >= asString(rightValue));
             } else {
                 throw std::runtime_error("Operands must be two numbers or two strings.");
             }
             break;
         case TokenType::LESS:
-            if (leftValue.index() == 0 && rightValue.index() == 0) {
-                result = std::get<double>(leftValue) < std::get<double>(rightValue);
-            } else if (leftValue.index() == 1 && rightValue.index() == 1) {
-                result = std::get<std::string>(leftValue) < std::get<std::string>(rightValue);
+            if (isNumber(leftValue) && isNumber(rightValue)) {
+                result = makeBoolean(asNumber(leftValue) < asNumber(rightValue));
+            } else if (isString(leftValue) && isString(rightValue)) {
+                result = makeBoolean(asString(leftValue) < asString(rightValue));
             } else {
                 throw std::runtime_error("Operands must be two numbers or two strings.");
             }
             break;
         case TokenType::LESS_EQUAL:
-            if (leftValue.index() == 0 && rightValue.index() == 0) {
-                result = std::get<double>(leftValue) <= std::get<double>(rightValue);
-            } else if (leftValue.index() == 1 && rightValue.index() == 1) {
-                result = std::get<std::string>(leftValue) <= std::get<std::string>(rightValue);
+            if (isNumber(leftValue) && isNumber(rightValue)) {
+                result = makeBoolean(asNumber(leftValue) <= asNumber(rightValue));
+            } else if (isString(leftValue) && isString(rightValue)) {
+                result = makeBoolean(asString(leftValue) <= asString(rightValue));
             } else {
                 throw std::runtime_error("Operands must be two numbers or two strings.");
             }
             break;
         case TokenType::EQUAL_EQUAL:
-            result = isEqual(leftValue, rightValue);
+            result = makeBoolean(isEqual(leftValue, rightValue));
             break;
         case TokenType::BANG_EQUAL:
-            result = !isEqual(leftValue, rightValue);
+            result = makeBoolean(!isEqual(leftValue, rightValue));
             break;
         default:
             throw std::runtime_error("Invalid binary operator");
         }
     }
 
+    void visit(ArrayExpr* expr) override {
+        std::vector<Value> array;
+        for (const auto& element : expr->elements) {
+            element->accept(this);
+            array.push_back(result);
+        }
+        result = makeArray(array);
+    }
+
+    void visit(IndexExpr* expr) override {
+        // Evaluate the object being indexed
+        expr->object->accept(this);
+        auto object = result;
+        
+        // Evaluate the index
+        expr->index->accept(this);
+        auto index = result;
+        
+        // Make sure we're indexing an array
+        if (!isArray(object)) {
+            throw std::runtime_error("Cannot index a non-array value");
+        }
+        
+        // Make sure the index is a number
+        if (!isNumber(index)) {
+            throw std::runtime_error("Array index must be a number");
+        }
+        
+        auto& array = asArray(object);
+        int idx = static_cast<int>(asNumber(index));
+        
+        // Check bounds
+        if (idx < 0 || idx >= static_cast<int>(array.size())) {
+            throw std::runtime_error("Array index out of bounds: " + std::to_string(idx));
+        }
+        
+        // Return the element at the index
+        result = array[idx];
+    }
+
+    void visit(AssignIndexExpr* expr) override {
+        // Evaluate the object being indexed
+        expr->object->accept(this);
+        auto object = result;
+        
+        // Evaluate the index
+        expr->index->accept(this);
+        auto index = result;
+        
+        // Evaluate the value to assign
+        expr->value->accept(this);
+        auto value = result;
+        
+        // Make sure we're indexing an array
+        if (!isArray(object)) {
+            throw std::runtime_error("Cannot index a non-array value");
+        }
+        
+        // Make sure the index is a number
+        if (!isNumber(index)) {
+            throw std::runtime_error("Array index must be a number");
+        }
+        
+        auto& array = asArray(object);
+        int idx = static_cast<int>(asNumber(index));
+        
+        // Check bounds
+        if (idx < 0 || idx >= static_cast<int>(array.size())) {
+            throw std::runtime_error("Array index out of bounds: " + std::to_string(idx));
+        }
+        
+        // Assign the value to the array element
+        array[idx] = value;
+        
+        // Return the assigned value
+        result = value;
+    }
+
+    void visit(BlockStmt* stmt) override {
+        for (const auto& statement : stmt->statements) {
+            if (breakEncountered || continueEncountered) {
+                break;
+            }
+            execute(statement);
+        }
+    }
+    
+    void visit(LoopStmt* stmt) override {
+        bool oldInLoop = inLoop;
+        inLoop = true;
+        
+        // Evaluate the from expression
+        stmt->from->accept(this);
+        double fromValue = asNumber(result);
+        
+        // Evaluate the to expression
+        stmt->to->accept(this);
+        double toValue = asNumber(result);
+        
+        // Evaluate the step expression if it exists
+        double stepValue = 1.0;
+        if (stmt->step) {
+            stmt->step->accept(this);
+            stepValue = asNumber(result);
+        }
+        
+        bool isDownLoop = stmt->isDownward;
+        
+        // Set the loop variable
+        environment.define(stmt->var.lexeme, makeNumber(fromValue));
+        
+        // Execute the loop
+        while (true) {
+            // Check the loop condition
+            double currentValue = asNumber(environment.get(stmt->var.lexeme));
+            if ((isDownLoop && currentValue < toValue) || (!isDownLoop && currentValue > toValue)) {
+                break;
+            }
+            
+            // Execute the body
+            execute(stmt->body);
+            
+            // Handle break
+            if (breakEncountered) {
+                breakEncountered = false;
+                break;
+            }
+            
+            // Reset continue flag
+            continueEncountered = false;
+            
+            // Update the loop variable
+            double newValue = currentValue + (isDownLoop ? -stepValue : stepValue);
+            environment.assign(stmt->var.lexeme, makeNumber(newValue));
+        }
+        
+        inLoop = oldInLoop;
+    }
+    
+    void visit(BreakStmt* stmt) override {
+        if (!inLoop) {
+            throw std::runtime_error("Cannot use 'break' outside of a loop.");
+        }
+        breakEncountered = true;
+    }
+    
+    void visit(ContinueStmt* stmt) override {
+        if (!inLoop) {
+            throw std::runtime_error("Cannot use 'continue' outside of a loop.");
+        }
+        continueEncountered = true;
+    }
+    
+    void visit(ExpressionStmt* stmt) override {
+        stmt->expression->accept(this);
+    }
+    
+    void visit(CompEqStmt* stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        stmt->right->accept(this);
+        auto rightValue = result;
+        
+        result = makeBoolean(isEqual(leftValue, rightValue));
+        
+        if (isTruthy(result)) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(CompNeqStmt* stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        stmt->right->accept(this);
+        auto rightValue = result;
+        
+        result = makeBoolean(!isEqual(leftValue, rightValue));
+        
+        if (isTruthy(result)) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(CompGeStmt* stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        stmt->right->accept(this);
+        auto rightValue = result;
+        
+        bool compResult = false;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+            compResult = asNumber(leftValue) >= asNumber(rightValue);
+        } else if (isString(leftValue) && isString(rightValue)) {
+            compResult = asString(leftValue) >= asString(rightValue);
+        } else {
+            throw std::runtime_error("Operands must be two numbers or two strings.");
+        }
+        
+        result = makeBoolean(compResult);
+        
+        if (compResult) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(CompLeStmt* stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        stmt->right->accept(this);
+        auto rightValue = result;
+        
+        bool compResult = false;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+            compResult = asNumber(leftValue) <= asNumber(rightValue);
+        } else if (isString(leftValue) && isString(rightValue)) {
+            compResult = asString(leftValue) <= asString(rightValue);
+        } else {
+            throw std::runtime_error("Operands must be two numbers or two strings.");
+        }
+        
+        result = makeBoolean(compResult);
+        
+        if (compResult) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(CompGStmt* stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        stmt->right->accept(this);
+        auto rightValue = result;
+        
+        bool compResult = false;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+            compResult = asNumber(leftValue) > asNumber(rightValue);
+        } else if (isString(leftValue) && isString(rightValue)) {
+            compResult = asString(leftValue) > asString(rightValue);
+        } else {
+            throw std::runtime_error("Operands must be two numbers or two strings.");
+        }
+        
+        result = makeBoolean(compResult);
+        
+        if (compResult) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(CompLStmt* stmt) override {
+        stmt->left->accept(this);
+        auto leftValue = result;
+        stmt->right->accept(this);
+        auto rightValue = result;
+        
+        bool compResult = false;
+        if (isNumber(leftValue) && isNumber(rightValue)) {
+            compResult = asNumber(leftValue) < asNumber(rightValue);
+        } else if (isString(leftValue) && isString(rightValue)) {
+            compResult = asString(leftValue) < asString(rightValue);
+        } else {
+            throw std::runtime_error("Operands must be two numbers or two strings.");
+        }
+        
+        result = makeBoolean(compResult);
+        
+        if (compResult) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(AndConditionStmt* stmt) override {
+        // Evaluate all conditions with short-circuiting
+        bool allTrue = true;
+        for (const auto& condition : stmt->conditions) {
+            execute(condition);
+            if (!isTruthy(result)) {
+                allTrue = false;
+                break;
+            }
+        }
+        
+        // Execute appropriate branch
+        if (allTrue) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(OrConditionStmt* stmt) override {
+        // Evaluate conditions with short-circuiting
+        bool anyTrue = false;
+        for (const auto& condition : stmt->conditions) {
+            execute(condition);
+            if (isTruthy(result)) {
+                anyTrue = true;
+                break;
+            }
+        }
+        
+        // Execute appropriate branch
+        if (anyTrue) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(AndStmt* stmt) override {
+        // Short-circuit evaluation for AND
+        stmt->left->accept(this);
+        
+        if (!isTruthy(result)) {
+            // If left side is false, short-circuit
+            result = makeBoolean(false);
+            if (stmt->elseBranch) {
+                execute(stmt->elseBranch);
+            }
+            return;
+        }
+        
+        // Evaluate right side
+        stmt->right->accept(this);
+        bool rightResult = isTruthy(result);
+        result = makeBoolean(rightResult);
+        
+        if (rightResult) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(OrStmt* stmt) override {
+        // Short-circuit evaluation for OR
+        stmt->left->accept(this);
+        
+        if (isTruthy(result)) {
+            // If left side is true, short-circuit
+            result = makeBoolean(true);
+            execute(stmt->thenBranch);
+            return;
+        }
+        
+        // Evaluate right side
+        stmt->right->accept(this);
+        bool rightResult = isTruthy(result);
+        result = makeBoolean(rightResult);
+        
+        if (rightResult) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(NotStmt* stmt) override {
+        stmt->operand->accept(this);
+        bool notResult = !isTruthy(result);
+        result = makeBoolean(notResult);
+        
+        if (notResult) {
+            execute(stmt->thenBranch);
+        } else if (stmt->elseBranch) {
+            execute(stmt->elseBranch);
+        }
+    }
+    
+    void visit(CompEqExpr* expr) override {
+        expr->left->accept(this);
+        auto leftValue = result;
+        expr->right->accept(this);
+        auto rightValue = result;
+        
+        result = makeBoolean(isEqual(leftValue, rightValue));
+    }
+
+    // Helper for converting any value to a string
+    std::string valueToString(const Value& value) {
+        if (isString(value)) {
+            return asString(value);
+        } else if (isNumber(value)) {
+            double num = asNumber(value);
+            if (num == static_cast<int>(num)) {
+                // It's a whole number, remove decimal part
+                return std::to_string(static_cast<int>(num));
+            } else {
+                // Format with precision to avoid trailing zeros
+                std::ostringstream ss;
+                ss << std::fixed << std::setprecision(15) << num;
+                std::string str = ss.str();
+                // Remove trailing zeros
+                str = str.substr(0, str.find_last_not_of('0') + 1);
+                // Remove trailing decimal point if needed
+                if (str.back() == '.') str.pop_back();
+                return str;
+            }
+        } else if (isBoolean(value)) {
+            return asBoolean(value) ? "true" : "false";
+        } else if (isArray(value)) {
+            // Create string representation of array
+            std::string result = "[";
+            const auto& array = asArray(value);
+            for (size_t i = 0; i < array.size(); i++) {
+                result += valueToString(array[i]);
+                if (i < array.size() - 1) {
+                    result += ", ";
+                }
+            }
+            result += "]";
+            return result;
+        }
+        return "nil";
+    }
+
     // Helper for boolean equality comparison
-    bool isEqual(const std::variant<double, std::string, bool>& a, 
-                 const std::variant<double, std::string, bool>& b) {
+    bool isEqual(const Value& a, const Value& b) {
+        // Check if they're the same object
+        if (a == b) return true;
+        
         // Different types are never equal
-        if (a.index() != b.index()) return false;
+        if (a->type != b->type) return false;
         
         // Same type comparison
-        switch (a.index()) {
-            case 0: // double
-                return std::get<double>(a) == std::get<double>(b);
-            case 1: // string
-                return std::get<std::string>(a) == std::get<std::string>(b);
-            case 2: // boolean
-                return std::get<bool>(a) == std::get<bool>(b);
+        switch (a->type) {
+            case ValueImpl::Type::NUMBER:
+                return asNumber(a) == asNumber(b);
+            case ValueImpl::Type::STRING:
+                return asString(a) == asString(b);
+            case ValueImpl::Type::BOOLEAN:
+                return asBoolean(a) == asBoolean(b);
+            case ValueImpl::Type::ARRAY: {
+                const auto& arrayA = asArray(a);
+                const auto& arrayB = asArray(b);
+                
+                // Different lengths means different arrays
+                if (arrayA.size() != arrayB.size()) return false;
+                
+                // Compare each element
+                for (size_t i = 0; i < arrayA.size(); i++) {
+                    if (!isEqual(arrayA[i], arrayB[i])) return false;
+                }
+                return true;
+            }
             default:
                 return false;
         }
@@ -175,9 +607,9 @@ public:
 
     // Helper to check number operands
     void checkNumberOperands(const Token& op, 
-                            const std::variant<double, std::string, bool>& left,
-                            const std::variant<double, std::string, bool>& right) {
-        if (left.index() == 0 && right.index() == 0) return;
+                            const Value& left,
+                            const Value& right) {
+        if (isNumber(left) && isNumber(right)) return;
         throw std::runtime_error(std::string("Operands must be numbers for operator '") + 
                                 op.lexeme + "'.");
     }
@@ -185,61 +617,13 @@ public:
     void visit(PrintStmt *stmt) override
     {
         stmt->expression->accept(this);
-        std::visit([](auto &&arg) {
-            std::string output;
-            if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, std::string>) {
-                output = arg;
-            } else if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, bool>) {
-                output = arg ? "true" : "false";
-            } else {
-                // Format number with better precision
-                double value = arg;
-                if (value == static_cast<int>(value)) {
-                    // It's a whole number
-                    output = std::to_string(static_cast<int>(value));
-                } else {
-                    // Format with precision to avoid trailing zeros
-                    std::ostringstream ss;
-                    ss << std::fixed << std::setprecision(15) << value;
-                    output = ss.str();
-                    // Remove trailing zeros
-                    output = output.substr(0, output.find_last_not_of('0') + 1);
-                    // Remove trailing decimal point if needed
-                    if (output.back() == '.') {
-                        output.pop_back();
-                    }
-                }
-            }
-            
-            // Process escape sequences
-            std::string processed;
-            for (size_t i = 0; i < output.length(); i++) {
-                if (output[i] == '\\' && i + 1 < output.length()) {
-                    switch (output[i + 1]) {
-                        case 'n':
-                            processed += '\n';
-                            i++;
-                            break;
-                        case 't':
-                            processed += '\t';
-                            i++;
-                            break;
-                        default:
-                            processed += output[i];
-                    }
-                } else {
-                    processed += output[i];
-                }
-            }
-            
-            // Print without adding a newline
-            std::cout << processed;
-        }, result);
+        
+        std::cout << valueToString(result);
     }
 
     void visit(VarStmt *stmt) override
     {
-        std::variant<double, std::string, bool> value;
+        Value value;
         if (stmt->initializer != nullptr)
         {
             stmt->initializer->accept(this);
@@ -247,7 +631,7 @@ public:
         }
         else
         {
-            value = 0.0;
+            value = makeNumber(0.0);
         }
         environment.define(stmt->name.lexeme, value);
     }
@@ -264,496 +648,105 @@ public:
             
             // Check if the entire string was converted
             if (pos == input.length()) {
-                environment.define(stmt->variableName.lexeme, value);
+                environment.define(stmt->variableName.lexeme, makeNumber(value));
             } else {
                 // Check for boolean values
                 if (input == "true") {
-                    environment.define(stmt->variableName.lexeme, true);
+                    environment.define(stmt->variableName.lexeme, makeBoolean(true));
                 } else if (input == "false") {
-                    environment.define(stmt->variableName.lexeme, false);
+                    environment.define(stmt->variableName.lexeme, makeBoolean(false));
+                } else if (input.front() == '[' && input.back() == ']') {
+                    // Basic array parsing for input (simple format)
+                    std::vector<Value> array;
+                    // Parse a simple comma-separated list of values
+                    std::string contents = input.substr(1, input.length() - 2);
+                    std::istringstream ss(contents);
+                    std::string item;
+                    
+                    while (std::getline(ss, item, ',')) {
+                        // Trim spaces
+                        item.erase(0, item.find_first_not_of(" \t"));
+                        item.erase(item.find_last_not_of(" \t") + 1);
+                        
+                        // Try to parse as number, boolean, or string
+                        if (item == "true") {
+                            array.push_back(makeBoolean(true));
+                        } else if (item == "false") {
+                            array.push_back(makeBoolean(false));
+                        } else {
+                            try {
+                                size_t pos;
+                                double num = std::stod(item, &pos);
+                                if (pos == item.length()) {
+                                    array.push_back(makeNumber(num));
+                                } else {
+                                    array.push_back(makeString(item));
+                                }
+                            } catch (const std::exception&) {
+                                array.push_back(makeString(item));
+                            }
+                        }
+                    }
+                    
+                    environment.define(stmt->variableName.lexeme, makeArray(array));
                 } else {
-                    environment.define(stmt->variableName.lexeme, input);
+                    environment.define(stmt->variableName.lexeme, makeString(input));
                 }
             }
         }
         catch (const std::invalid_argument&) {
             // Check for boolean values
             if (input == "true") {
-                environment.define(stmt->variableName.lexeme, true);
+                environment.define(stmt->variableName.lexeme, makeBoolean(true));
             } else if (input == "false") {
-                environment.define(stmt->variableName.lexeme, false);
+                environment.define(stmt->variableName.lexeme, makeBoolean(false));
+            } else if (input.front() == '[' && input.back() == ']') {
+                // Basic array parsing
+                std::vector<Value> array;
+                // Very simple parsing - split by commas
+                std::string contents = input.substr(1, input.length() - 2);
+                std::istringstream ss(contents);
+                std::string item;
+                
+                while (std::getline(ss, item, ',')) {
+                    // Trim spaces
+                    item.erase(0, item.find_first_not_of(" \t"));
+                    item.erase(item.find_last_not_of(" \t") + 1);
+                    
+                    // Just store everything as strings in this basic version
+                    array.push_back(makeString(item));
+                }
+                
+                environment.define(stmt->variableName.lexeme, makeArray(array));
             } else {
                 // Not a number or boolean, treat as string
-                environment.define(stmt->variableName.lexeme, input);
+                environment.define(stmt->variableName.lexeme, makeString(input));
             }
         }
         catch (const std::out_of_range&) {
             // Number out of range
             std::cerr << "Warning: Number out of range, treating as string" << std::endl;
-            environment.define(stmt->variableName.lexeme, input);
+            environment.define(stmt->variableName.lexeme, makeString(input));
         }
     }
     
     // Helper to check if a value is truthy
-    bool isTruthy(const std::variant<double, std::string, bool>& value) {
-        if (value.index() == 2) { // boolean
-            return std::get<bool>(value);
-        } else if (value.index() == 0) { // number
-            return std::get<double>(value) != 0.0;
-        } else { // string
-            return !std::get<std::string>(value).empty();
+    bool isTruthy(const Value& value) {
+        if (isBoolean(value)) { // boolean
+            return asBoolean(value);
+        } else if (isNumber(value)) { // number
+            return asNumber(value) != 0.0;
+        } else if (isString(value)) { // string
+            return !asString(value).empty();
+        } else if (isArray(value)) { // array
+            return !asArray(value).empty();
         }
-    }
-
-    void visit(CompEqStmt *stmt) override {
-        if (!stmt) return;
-        
-        stmt->left->accept(this);
-        auto leftValue = result;
-        stmt->right->accept(this);
-        auto rightValue = result;
-        
-        bool isEqual = this->isEqual(leftValue, rightValue);
-        result = isEqual; // Store as boolean directly
-        
-        if (isEqual && stmt->thenBranch) {
-            stmt->thenBranch->accept(this);
-            return;
-        } 
-        
-        if (!isEqual && stmt->elseBranch) {
-            stmt->elseBranch->accept(this);
-        }
-    }
-
-    void visit(CompNeqStmt *stmt) override {
-        if (!stmt) return;
-        
-        stmt->left->accept(this);
-        auto leftValue = result;
-        stmt->right->accept(this);
-        auto rightValue = result;
-        
-        // Use the isEqual helper and negate the result
-        bool isNotEqual = !isEqual(leftValue, rightValue);
-        // Store the boolean value
-        result = isNotEqual;
-        
-        // Execute the appropriate branch
-        if (isNotEqual && stmt->thenBranch) {
-            stmt->thenBranch->accept(this);
-        } else if (!isNotEqual && stmt->elseBranch) {
-            stmt->elseBranch->accept(this);
-        }
-    }
-
-    void visit(CompGeStmt *stmt) override {
-        if (!stmt) return;
-        
-        stmt->left->accept(this);
-        auto leftValue = result;
-        stmt->right->accept(this);
-        auto rightValue = result;
-        
-        bool isGreaterEqual = false;
-        
-        // Handle comparisons based on types
-        if (leftValue.index() == rightValue.index()) {
-            if (leftValue.index() == 0) { // numbers
-                isGreaterEqual = std::get<double>(leftValue) >= std::get<double>(rightValue);
-            } else if (leftValue.index() == 1) { // strings
-                isGreaterEqual = std::get<std::string>(leftValue) >= std::get<std::string>(rightValue);
-            } else if (leftValue.index() == 2) { // booleans
-                // For booleans: true >= true, true >= false, false >= false
-                isGreaterEqual = !std::get<bool>(leftValue) || std::get<bool>(rightValue);
-            }
-        }
-        
-        result = isGreaterEqual; // Store result directly as a boolean
-        
-        if (isGreaterEqual && stmt->thenBranch) {
-            stmt->thenBranch->accept(this);
-            return;
-        }
-        
-        if (!isGreaterEqual && stmt->elseBranch) {
-            stmt->elseBranch->accept(this);
-        }
-    }
-
-    void visit(CompLeStmt *stmt) override {
-        if (!stmt) return;
-        
-        stmt->left->accept(this);
-        auto leftValue = result;
-        stmt->right->accept(this);
-        auto rightValue = result;
-        
-        bool isLessEqual = false;
-        
-        // Handle comparisons based on types
-        if (leftValue.index() == rightValue.index()) {
-            if (leftValue.index() == 0) { // numbers
-                isLessEqual = std::get<double>(leftValue) <= std::get<double>(rightValue);
-            } else if (leftValue.index() == 1) { // strings
-                isLessEqual = std::get<std::string>(leftValue) <= std::get<std::string>(rightValue);
-            } else if (leftValue.index() == 2) { // booleans
-                // For booleans: false <= false, false <= true, true <= true
-                isLessEqual = std::get<bool>(leftValue) <= std::get<bool>(rightValue);
-            }
-        }
-        
-        result = isLessEqual; // Store as a boolean directly
-        
-        if (isLessEqual && stmt->thenBranch) {
-            stmt->thenBranch->accept(this);
-            return;
-        }
-        
-        if (!isLessEqual && stmt->elseBranch) {
-            stmt->elseBranch->accept(this);
-        }
-    }
-
-    void visit(CompGStmt *stmt) override {
-        if (!stmt) return;
-        
-        stmt->left->accept(this);
-        auto leftValue = result;
-        stmt->right->accept(this);
-        auto rightValue = result;
-        
-        bool isGreater = false;
-        
-        // Handle comparisons based on types
-        if (leftValue.index() == rightValue.index()) {
-            if (leftValue.index() == 0) { // numbers
-                isGreater = std::get<double>(leftValue) > std::get<double>(rightValue);
-            } else if (leftValue.index() == 1) { // strings
-                isGreater = std::get<std::string>(leftValue) > std::get<std::string>(rightValue);
-            } else if (leftValue.index() == 2) { // booleans
-                // For booleans: true > false, but not false > true or others
-                isGreater = std::get<bool>(leftValue) && !std::get<bool>(rightValue);
-            }
-        }
-        
-        result = isGreater; // Store boolean result
-        
-        if (isGreater && stmt->thenBranch) {
-            stmt->thenBranch->accept(this);
-            return;
-        }
-        
-        // Handle else branch if not greater
-        if (!isGreater && stmt->elseBranch) {
-            stmt->elseBranch->accept(this);
-        }
-    }
-
-    void visit(CompLStmt *stmt) override {
-        if (!stmt) return;
-        
-        stmt->left->accept(this);
-        auto leftValue = result;
-        stmt->right->accept(this);
-        auto rightValue = result;
-        
-        bool isLess = false;
-        
-        // Handle comparisons based on types
-        if (leftValue.index() == rightValue.index()) {
-            if (leftValue.index() == 0) { // numbers
-                isLess = std::get<double>(leftValue) < std::get<double>(rightValue);
-            } else if (leftValue.index() == 1) { // strings
-                isLess = std::get<std::string>(leftValue) < std::get<std::string>(rightValue);
-            } else if (leftValue.index() == 2) { // booleans
-                // For booleans: false < true, but not others
-                isLess = !std::get<bool>(leftValue) && std::get<bool>(rightValue);
-            }
-        }
-        
-        result = isLess; // Store as boolean directly
-        
-        if (isLess && stmt->thenBranch) {
-            stmt->thenBranch->accept(this);
-            return;
-        }
-        
-        if (!isLess && stmt->elseBranch) {
-            stmt->elseBranch->accept(this);
-        }
-    }
-
-    void visit(AndStmt *stmt) override {
-        // First, ensure we have a valid statement
-        if (!stmt) return;
-        
-        // Evaluate first condition
-        stmt->left->accept(this);
-        double firstResult = std::get<double>(result);
-        
-        // Short-circuit if first condition is false
-        if (firstResult == 0.0) {
-            if (stmt->elseBranch) {
-                stmt->elseBranch->accept(this);
-            }
-            return;
-        }
-        
-        // Evaluate second condition only if first was true
-        stmt->right->accept(this);
-        double secondResult = std::get<double>(result);
-        
-        // Execute the appropriate branch based on the result
-        if (secondResult != 0.0) {
-            // Both conditions are true
-            stmt->thenBranch->accept(this);
-        } else {
-            // Second condition is false
-            if (stmt->elseBranch) {
-                stmt->elseBranch->accept(this);
-            }
-        }
-    }
-
-    void visit(OrStmt *stmt) override {
-        // Ensure we have a valid statement
-        if (!stmt) return;
-        
-        // Evaluate first condition
-        stmt->left->accept(this);
-        double firstResult = std::get<double>(result);
-        
-        // Short-circuit if first condition is true
-        if (firstResult != 0.0) {
-            if (stmt->thenBranch) {
-                stmt->thenBranch->accept(this);
-            }
-            return;
-        }
-        
-        // Evaluate second condition only if first was false
-        stmt->right->accept(this);
-        double secondResult = std::get<double>(result);
-        
-        // Execute appropriate branch based on result
-        if (secondResult != 0.0) {
-            // At least one condition is true
-            if (stmt->thenBranch) {
-                stmt->thenBranch->accept(this);
-            }
-        } else {
-            // Both conditions are false
-            if (stmt->elseBranch) {
-                stmt->elseBranch->accept(this);
-            }
-        }
-    }
-
-    void visit(NotStmt *stmt) override {
-        stmt->operand->accept(this);
-        auto operandValue = result;
-        if (std::get<double>(operandValue) == 0.0) {
-            stmt->thenBranch->accept(this);
-        }
-    }
-
-    void visit(BlockStmt *stmt) override
-    {
-        for (const auto &statement : stmt->statements)
-        {
-            statement->accept(this);
-        }
-    }
-
-    void visit(LoopStmt *stmt) override
-    {
-        if (!stmt) {
-            return;
-        }
-
-        // Track that we're inside a loop for break/continue validation
-        bool wasInLoop = inLoop;
-        inLoop = true;
-
-        try {
-            // Initialize loop variable
-            if (stmt->from) {
-                stmt->from->accept(this);
-                double fromValue = std::get<double>(result);
-                
-                // Check if already defined and update or create
-                if (environment.isDefined(stmt->var.lexeme)) {
-                    environment.assign(stmt->var.lexeme, fromValue);
-                } else {
-                    environment.define(stmt->var.lexeme, fromValue);
-                }
-            }
-
-            // Get end value
-            if (!stmt->to) {
-                return; // Safety check
-            }
-            stmt->to->accept(this);
-            double toValue = std::get<double>(result);
-
-            // Get step value
-            double stepValue = 1.0;
-            if (stmt->step) {
-                stmt->step->accept(this);
-                stepValue = std::get<double>(result);
-                if (stepValue == 0) {
-                    throw std::runtime_error("Step value cannot be zero");
-                }
-            }
-
-            if (stmt->isDownward) {
-                stepValue = -std::abs(stepValue);
-            }
-
-            while (true) {
-                // Check termination condition
-                if (!environment.isDefined(stmt->var.lexeme)) {
-                    throw std::runtime_error("Undefined loop variable '" + stmt->var.lexeme + "'");
-                }
-                
-                double currentValue = std::get<double>(environment.get(stmt->var.lexeme));
-                if (stmt->isDownward) {
-                    if (currentValue < toValue)
-                        break;
-                } else {
-                    if (currentValue > toValue)
-                        break;
-                }
-
-                // Execute loop body
-                if (stmt->body) {
-                    stmt->body->accept(this);
-                }
-
-                // Handle break
-                if (breakEncountered) {
-                    breakEncountered = false;
-                    break;
-                }
-
-                // Update loop variable before handling continue
-                if (environment.isDefined(stmt->var.lexeme)) {
-                    environment.assign(stmt->var.lexeme, currentValue + stepValue);
-                } else {
-                    environment.define(stmt->var.lexeme, currentValue + stepValue);
-                }
-
-                // Handle continue
-                if (continueEncountered) {
-                    continueEncountered = false;
-                    continue; // Skip to the next iteration
-                }
-            }
-        } catch (const std::exception &e) {
-            // Handle any errors that occur during loop execution
-            std::cerr << "Loop error: " << e.what() << std::endl;
-        }
-        
-        // Restore previous loop state
-        inLoop = wasInLoop;
-    }
-
-    void visit(BreakStmt *stmt) override
-    {
-        if (!inLoop) {
-            throw std::runtime_error("Break statement used outside of a loop");
-        }
-        breakEncountered = true;
-    }
-
-    void visit(ContinueStmt *stmt) override
-    {
-        if (!inLoop) {
-            throw std::runtime_error("Continue statement used outside of a loop");
-        }
-        continueEncountered = true;
-    }
-
-    void visit(ExpressionStmt *stmt) override
-    {
-        stmt->expression->accept(this);
-        // Store the result in case it's needed later
-        auto exprResult = result;
+        return false;
     }
 
     void visit(AssignExpr* expr) override {
         expr->value->accept(this);
         environment.assign(expr->name.lexeme, result);
-    }
-
-    void visit(CompEqExpr* expr) override {
-        expr->left->accept(this);
-        auto leftValue = result;
-        expr->right->accept(this);
-        auto rightValue = result;
-        
-        // Perform equality check without calling isEqual to avoid recursion
-        bool equal = false;
-        
-        // First check if types match
-        if (leftValue.index() == rightValue.index()) {
-            switch (leftValue.index()) {
-                case 0: // double
-                    equal = std::get<double>(leftValue) == std::get<double>(rightValue);
-                    break;
-                case 1: // string
-                    equal = std::get<std::string>(leftValue) == std::get<std::string>(rightValue);
-                    break;
-                case 2: // boolean
-                    equal = std::get<bool>(leftValue) == std::get<bool>(rightValue);
-                    break;
-            }
-        }
-        
-        result = equal;
-    }
-
-    void visit(AndConditionStmt* stmt) override {
-        if (!stmt || stmt->conditions.empty()) return;
-        
-        bool allTrue = true;
-        for (const auto& condition : stmt->conditions) {
-            condition->accept(this);
-            if (!isTruthy(result)) {
-                allTrue = false;
-                break;
-            }
-        }
-        
-        if (allTrue && stmt->thenBranch) {
-            stmt->thenBranch->accept(this);
-        } else if (!allTrue && stmt->elseBranch) {
-            stmt->elseBranch->accept(this);
-        }
-        
-        result = allTrue; // Store result as boolean
-    }
-
-    void visit(OrConditionStmt* stmt) override {
-        if (!stmt || stmt->conditions.empty()) return;
-        
-        bool anyTrue = false;
-        for (const auto& condition : stmt->conditions) {
-            condition->accept(this);
-            if (isTruthy(result)) {
-                anyTrue = true;
-                break;
-            }
-        }
-        
-        if (anyTrue && stmt->thenBranch) {
-            stmt->thenBranch->accept(this);
-        } else if (!anyTrue && stmt->elseBranch) {
-            stmt->elseBranch->accept(this);
-        }
-        
-        result = anyTrue; // Store result as boolean
     }
 
     void interpret(const std::vector<std::unique_ptr<Stmt>> &statements)
