@@ -228,8 +228,29 @@ Token Lexer::string()
     advance(); // Skip opening quote
     while (!isAtEnd() && currentChar() != '"')
     {
-        lexeme += currentChar();
-        advance();
+        // Process escape sequences
+        if (currentChar() == '\\' && current + 1 < source.size())
+        {
+            advance(); // Skip backslash
+            switch (currentChar())
+            {
+                case 'n': lexeme += '\n'; break;  // Newline
+                case 't': lexeme += '\t'; break;  // Tab
+                case 'r': lexeme += '\r'; break;  // Carriage return
+                case '\\': lexeme += '\\'; break; // Backslash
+                case '"': lexeme += '\"'; break;  // Double quote
+                case '\'': lexeme += '\''; break; // Single quote
+                default: 
+                    lexeme += currentChar(); 
+                    break;
+            }
+            advance();
+        }
+        else
+        {
+            lexeme += currentChar();
+            advance();
+        }
     }
     advance(); // Skip closing quote
 

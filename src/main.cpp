@@ -32,15 +32,11 @@ public:
     }
 
     static void runPrompt() {
-        // Initialize readline
         using_history();
         
         std::string line;
         while (true) {
-            // Use readline to get input with command history
             char* lineRaw = readline(">> ");
-            
-            // Check for EOF (Ctrl+D) or nullptr
             if (lineRaw == nullptr) {
                 std::cout << std::endl;
                 break;
@@ -48,23 +44,20 @@ public:
             
             line = lineRaw;
             
-            // Add non-empty lines to history
             if (!line.empty()) {
                 add_history(lineRaw);
             }
             
-            // Free memory allocated by readline
             free(lineRaw);
             
             if (line == "exit") {
-                std::cout << "Exiting!" << std::endl;
+                std::cout << "Exiting!";
                 break;
             }
             
             run(line);
         }
         
-        // Clean up history
         clear_history();
     }
 
