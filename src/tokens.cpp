@@ -17,6 +17,7 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::SEMICOLON: return ";";
         case TokenType::SLASH: return "/";
         case TokenType::STAR: return "*";
+        case TokenType::PERCENT: return "%";
         case TokenType::BANG: return "!";
         case TokenType::BANG_EQUAL: return "!=";
         case TokenType::EQUAL: return "=";

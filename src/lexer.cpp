@@ -125,6 +125,8 @@ TokenType Lexer::identifyToken(char ch)
         return TokenType::SLASH;
     case '*':
         return TokenType::STAR;
+    case '%':
+        return TokenType::PERCENT;
     case '!':
         return TokenType::BANG;
     case '=':

@@ -8,43 +8,35 @@
 #include <stdexcept>
 #include <memory>
 
-// Forward declarations
 struct ValueImpl;
 using Value = std::shared_ptr<ValueImpl>;
 
-// Actual value implementation
 struct ValueImpl {
     enum class Type { NUMBER, STRING, BOOLEAN, ARRAY };
     Type type;
 
-    // Use separate variables instead of a union with manual destruction
     double numberVal;
     bool boolVal;
     std::string stringVal;
     std::vector<Value> arrayVal;
 
-    // Constructors for each type
     ValueImpl(double val) : type(Type::NUMBER), numberVal(val), boolVal(false) {}
     ValueImpl(const std::string& val) : type(Type::STRING), numberVal(0), boolVal(false), stringVal(val) {}
     ValueImpl(bool val) : type(Type::BOOLEAN), numberVal(0), boolVal(val) {}
     ValueImpl(const std::vector<Value>& val) : type(Type::ARRAY), numberVal(0), boolVal(false), arrayVal(val) {}
 
-    // No need for a custom destructor - let the compiler handle it properly
 };
 
-// Helper functions to create Values of different types
 inline Value makeNumber(double val) { return std::make_shared<ValueImpl>(val); }
 inline Value makeString(const std::string& val) { return std::make_shared<ValueImpl>(val); }
 inline Value makeBoolean(bool val) { return std::make_shared<ValueImpl>(val); }
 inline Value makeArray(const std::vector<Value>& val) { return std::make_shared<ValueImpl>(val); }
 
-// Value type testing functions
 inline bool isNumber(const Value& val) { return val->type == ValueImpl::Type::NUMBER; }
 inline bool isString(const Value& val) { return val->type == ValueImpl::Type::STRING; }
 inline bool isBoolean(const Value& val) { return val->type == ValueImpl::Type::BOOLEAN; }
 inline bool isArray(const Value& val) { return val->type == ValueImpl::Type::ARRAY; }
 
-// Value accessor functions
 inline double asNumber(const Value& val) { 
     if (!isNumber(val)) throw std::runtime_error("Value is not a number");
     return val->numberVal; 
@@ -91,4 +83,4 @@ public:
     }
 };
 
-#endif //ENVIRONMENT_H
+#endif // ENVIRONMENT_H

@@ -24,7 +24,7 @@ AxScript is a simple yet powerful programming language implemented in C++ that s
 ```
 var x = 42;
 print x;
-var result = x + 8;
+var result = x + 8;j
 print result;
 ```
 

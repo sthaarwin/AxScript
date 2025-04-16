@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <cmath> 
 
 class Interpreter : public Visitor
 {
@@ -95,6 +96,13 @@ public:
                 throw std::runtime_error("Error: Division by zero");
             }
             result = makeNumber(asNumber(leftValue) / asNumber(rightValue));
+            break;
+        case TokenType::PERCENT: // Added modulo operator
+            checkNumberOperands(expr->op, leftValue, rightValue);
+            if (asNumber(rightValue) == 0) {
+                throw std::runtime_error("Error: Modulo by zero");
+            }
+            result = makeNumber(std::fmod(asNumber(leftValue), asNumber(rightValue)));
             break;
         case TokenType::GREATER:
             if (isNumber(leftValue) && isNumber(rightValue)) {

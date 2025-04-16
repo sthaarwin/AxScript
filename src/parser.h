@@ -602,7 +602,7 @@ private:
     {
         auto expr = unary();
 
-        while (match({TokenType::SLASH, TokenType::STAR}))
+        while (match({TokenType::SLASH, TokenType::STAR, TokenType::PERCENT}))
         {
             Token op = previous();
             auto right = unary();
