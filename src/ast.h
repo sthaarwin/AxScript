@@ -7,6 +7,11 @@
 #include "tokens.h"
 #include "visitor.h"
 
+// Forward declarations for function-related types
+class FunctionStmt;
+class CallExpr;
+class ReturnStmt;
+
 class Expr
 {
 public:
@@ -141,6 +146,24 @@ public:
 
     AssignIndexExpr(std::unique_ptr<Expr> object, std::unique_ptr<Expr> index, std::unique_ptr<Expr> value)
         : object(std::move(object)), index(std::move(index)), value(std::move(value)) {}
+
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class CallExpr : public Expr {
+public:
+    std::unique_ptr<Expr> callee;
+    Token paren;  // Closing parenthesis for error reporting
+    std::vector<std::unique_ptr<Expr>> arguments;
+
+    CallExpr(std::unique_ptr<Expr> callee, 
+             Token paren,
+             std::vector<std::unique_ptr<Expr>> arguments)
+        : callee(std::move(callee)), 
+          paren(paren), 
+          arguments(std::move(arguments)) {}
 
     void accept(Visitor* visitor) override {
         visitor->visit(this);
@@ -473,6 +496,35 @@ public:
                     std::unique_ptr<Stmt> elseBranch = nullptr)
         : ConditionStmt(std::move(conditions), std::move(thenBranch), std::move(elseBranch)) {}
     
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class FunctionStmt : public Stmt {
+public:
+    Token name;
+    std::vector<Token> parameters;
+    std::vector<std::unique_ptr<Stmt>> body;
+
+    FunctionStmt(Token name, 
+                std::vector<Token> parameters, 
+                std::vector<std::unique_ptr<Stmt>> body)
+        : name(name), parameters(std::move(parameters)), body(std::move(body)) {}
+
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
+class ReturnStmt : public Stmt {
+public:
+    Token keyword;
+    std::unique_ptr<Expr> value;
+
+    ReturnStmt(Token keyword, std::unique_ptr<Expr> value = nullptr)
+        : keyword(keyword), value(std::move(value)) {}
+
     void accept(Visitor* visitor) override {
         visitor->visit(this);
     }

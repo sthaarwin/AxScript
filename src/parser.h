@@ -41,6 +41,9 @@ private:
 
     std::unique_ptr<Stmt> declaration()
     {
+        if (match({TokenType::FUN})) {
+            return functionDeclaration("function");
+        }
         if (match({TokenType::VAR}))
         {
             return varDeclaration();
@@ -48,8 +51,38 @@ private:
         return statement();
     }
 
+    std::unique_ptr<Stmt> functionDeclaration(const std::string& kind) {
+        Token name = consume(TokenType::IDENTIFIER, "Expect " + kind + " name.");
+        consume(TokenType::LEFT_PAREN, "Expect '(' after " + kind + " name.");
+        
+        std::vector<Token> parameters;
+        if (!check(TokenType::RIGHT_PAREN)) {
+            do {
+                if (parameters.size() >= 255) {
+                    error(peek(), "Cannot have more than 255 parameters.");
+                }
+                parameters.push_back(consume(TokenType::IDENTIFIER, "Expect parameter name."));
+            } while (match({TokenType::COMMA}));
+        }
+        
+        consume(TokenType::RIGHT_PAREN, "Expect ')' after parameters.");
+        
+        consume(TokenType::LEFT_BRACE, "Expect '{' before " + kind + " body.");
+        auto body = block();
+        
+        std::vector<std::unique_ptr<Stmt>> functionBody;
+        for (auto& stmt : dynamic_cast<BlockStmt*>(body.get())->statements) {
+            functionBody.push_back(std::move(stmt));
+        }
+        
+        return std::make_unique<FunctionStmt>(name, parameters, std::move(functionBody));
+    }
+
     std::unique_ptr<Stmt> statement()
     {
+        if (match({TokenType::RETURN_KW})) {
+            return returnStatement();
+        }
         if (match({TokenType::PRINT}))
         {
             return printStatement();
@@ -76,13 +109,7 @@ private:
 
         if (match({TokenType::LEFT_BRACE}))
         {
-            std::vector<std::unique_ptr<Stmt>> statements;
-            while (!check(TokenType::RIGHT_BRACE) && !isAtEnd())
-            {
-                statements.push_back(declaration());
-            }
-            consume(TokenType::RIGHT_BRACE, "Expect '}' after block.");
-            return std::make_unique<BlockStmt>(std::move(statements));
+            return block();
         }
 
         if (match({TokenType::COMPEQ})) {
@@ -227,6 +254,27 @@ private:
         }
 
         return expressionStatement();
+    }
+
+    std::unique_ptr<Stmt> block() {
+        std::vector<std::unique_ptr<Stmt>> statements;
+        while (!check(TokenType::RIGHT_BRACE) && !isAtEnd()) {
+            statements.push_back(declaration());
+        }
+        consume(TokenType::RIGHT_BRACE, "Expect '}' after block.");
+        return std::make_unique<BlockStmt>(std::move(statements));
+    }
+
+    std::unique_ptr<Stmt> returnStatement() {
+        Token keyword = previous();
+        std::unique_ptr<Expr> value = nullptr;
+        
+        if (!check(TokenType::SEMICOLON)) {
+            value = expression();
+        }
+        
+        consume(TokenType::SEMICOLON, "Expect ';' after return value.");
+        return std::make_unique<ReturnStmt>(keyword, std::move(value));
     }
 
     std::unique_ptr<Stmt> expressionStatement()
@@ -675,7 +723,9 @@ private:
         auto expr = primary();
         
         while (true) {
-            if (match({TokenType::LEFT_BRACKET})) {
+            if (match({TokenType::LEFT_PAREN})) {
+                expr = finishCall(std::move(expr));
+            } else if (match({TokenType::LEFT_BRACKET})) {
                 // Array indexing: array[index]
                 auto index = expression();
                 consume(TokenType::RIGHT_BRACKET, "Expect ']' after index.");
@@ -686,6 +736,23 @@ private:
         }
         
         return expr;
+    }
+
+    std::unique_ptr<Expr> finishCall(std::unique_ptr<Expr> callee) {
+        std::vector<std::unique_ptr<Expr>> arguments;
+        
+        if (!check(TokenType::RIGHT_PAREN)) {
+            do {
+                if (arguments.size() >= 255) {
+                    error(peek(), "Cannot have more than 255 arguments.");
+                }
+                arguments.push_back(expression());
+            } while (match({TokenType::COMMA}));
+        }
+        
+        Token paren = consume(TokenType::RIGHT_PAREN, "Expect ')' after arguments.");
+        
+        return std::make_unique<CallExpr>(std::move(callee), paren, std::move(arguments));
     }
 
     std::unique_ptr<Expr> unary() {
@@ -1080,6 +1147,15 @@ private:
             std::move(elseIfBranches),
             std::move(elseBranch)
         );
+    }
+
+    void error(const Token& token, const std::string& message) {
+        if (token.type == TokenType::EOF_TOKEN) {
+            std::cerr << "[line " << token.line << "] Error at end: " << message << std::endl;
+        } else {
+            std::cerr << "[line " << token.line << "] Error at '" << token.lexeme << "': " << message << std::endl;
+        }
+        throw std::runtime_error(message);
     }
 };
 

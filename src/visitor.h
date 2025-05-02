@@ -30,6 +30,9 @@ class AssignExpr;
 class ArrayExpr;
 class IndexExpr;
 class AssignIndexExpr;
+class FunctionStmt;
+class CallExpr;
+class ReturnStmt;
 
 class Visitor {
 public:
@@ -62,6 +65,9 @@ public:
     virtual void visit(ArrayExpr* expr) = 0;
     virtual void visit(IndexExpr* expr) = 0;
     virtual void visit(AssignIndexExpr* expr) = 0;
+    virtual void visit(FunctionStmt* stmt) = 0;
+    virtual void visit(CallExpr* expr) = 0;
+    virtual void visit(ReturnStmt* stmt) = 0;
 };
 
 #endif // VISITOR_H

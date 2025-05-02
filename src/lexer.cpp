@@ -32,7 +32,7 @@ Lexer::Lexer(const std::string source) : source(source), current(0), line(1)
     keywords["not"] = TokenType::NOT;
     keywords["true"] = TokenType::TRUE;
     keywords["return"] = TokenType::RETURN_KW;
-    // keywords["fun"] = TokenType::FUN;
+    keywords["fun"] = TokenType::FUN;
     // keywords["super"] = TokenType::SUPER;
     // keywords["this"] = TokenType::THIS;
     // keywords["while"] = TokenType::WHILE;

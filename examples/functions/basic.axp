@@ -1,0 +1,42 @@
+// Basic function example
+// Shows defining functions, calling them, and returning values
+
+// A simple function with no parameters
+fun sayHello() {
+    print "Hello from a function!\n";
+}
+
+// A function with parameters
+fun greet(name) {
+    print "Hello, " + name + "!\n";
+}
+
+// A function that returns a value
+fun add(a, b) {
+    return a + b;
+}
+
+// A function that does a calculation and returns the result
+fun calculateArea(width, height) {
+    var area = width * height;
+    return area;
+}
+
+// Function calls
+print "Calling functions:\n";
+sayHello();
+
+print "\nGreeting with parameter:\n";
+greet("AxScript");
+
+print "\nAdding numbers:\n";
+var sum = add(5, 3);
+print "5 + 3 = " + sum + "\n";
+
+print "\nCalculating area:\n";
+var area = calculateArea(4, 6);
+print "Area of 4x6 rectangle: " + area + "\n";
+
+// Nested function calls
+print "\nNested function calls:\n";
+print "Double sum: " + add(add(2, 3), add(4, 5)) + "\n";

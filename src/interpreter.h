@@ -14,7 +14,6 @@ class Interpreter : public Visitor
 {
 private:
     Value result;
-    Environment environment;
     bool breakEncountered = false;
     bool continueEncountered = false;
     bool inLoop = false; // Track whether we're inside a loop for break/continue validation
@@ -27,6 +26,34 @@ private:
     }
 
 public:
+    std::shared_ptr<Environment> environment = std::make_shared<Environment>();
+    
+    void executeBlock(const std::vector<std::unique_ptr<Stmt>>& statements, 
+                     std::shared_ptr<Environment> environment) {
+        // Save the current environment
+        std::shared_ptr<Environment> previousEnvironment = this->environment;
+        
+        try {
+            // Set the environment to the new one for the block
+            this->environment = environment;
+            
+            // Execute all statements in the block
+            for (const auto& statement : statements) {
+                execute(statement);
+                if (breakEncountered || continueEncountered) {
+                    break;
+                }
+            }
+        } catch (...) {
+            // Restore the previous environment on any exception
+            this->environment = previousEnvironment;
+            throw;
+        }
+        
+        // Restore the previous environment
+        this->environment = previousEnvironment;
+    }
+
     void visit(NumberExpr *expr) override
     {
         result = makeNumber(expr->value);
@@ -44,9 +71,9 @@ public:
 
     void visit(VariableExpr *expr) override
     {
-        if (environment.isDefined(expr->name.lexeme))
+        if (environment->isDefined(expr->name.lexeme))
         {
-            result = environment.get(expr->name.lexeme);
+            result = environment->get(expr->name.lexeme);
         }
         else
         {
@@ -260,12 +287,12 @@ public:
         bool isDownLoop = stmt->isDownward;
         
         // Set the loop variable
-        environment.define(stmt->var.lexeme, makeNumber(fromValue));
+        environment->define(stmt->var.lexeme, makeNumber(fromValue));
         
         // Execute the loop
         while (true) {
             // Check the loop condition
-            double currentValue = asNumber(environment.get(stmt->var.lexeme));
+            double currentValue = asNumber(environment->get(stmt->var.lexeme));
             if ((isDownLoop && currentValue < toValue) || (!isDownLoop && currentValue > toValue)) {
                 break;
             }
@@ -284,7 +311,7 @@ public:
             
             // Update the loop variable
             double newValue = currentValue + (isDownLoop ? -stepValue : stepValue);
-            environment.assign(stmt->var.lexeme, makeNumber(newValue));
+            environment->assign(stmt->var.lexeme, makeNumber(newValue));
         }
         
         inLoop = oldInLoop;
@@ -641,7 +668,7 @@ public:
         {
             value = makeNumber(0.0);
         }
-        environment.define(stmt->name.lexeme, value);
+        environment->define(stmt->name.lexeme, value);
     }
 
     void visit(InputStmt *stmt) override
@@ -656,13 +683,13 @@ public:
             
             // Check if the entire string was converted
             if (pos == input.length()) {
-                environment.define(stmt->variableName.lexeme, makeNumber(value));
+                environment->define(stmt->variableName.lexeme, makeNumber(value));
             } else {
                 // Check for boolean values
                 if (input == "true") {
-                    environment.define(stmt->variableName.lexeme, makeBoolean(true));
+                    environment->define(stmt->variableName.lexeme, makeBoolean(true));
                 } else if (input == "false") {
-                    environment.define(stmt->variableName.lexeme, makeBoolean(false));
+                    environment->define(stmt->variableName.lexeme, makeBoolean(false));
                 } else if (input.front() == '[' && input.back() == ']') {
                     // Basic array parsing for input (simple format)
                     std::vector<Value> array;
@@ -696,18 +723,18 @@ public:
                         }
                     }
                     
-                    environment.define(stmt->variableName.lexeme, makeArray(array));
+                    environment->define(stmt->variableName.lexeme, makeArray(array));
                 } else {
-                    environment.define(stmt->variableName.lexeme, makeString(input));
+                    environment->define(stmt->variableName.lexeme, makeString(input));
                 }
             }
         }
         catch (const std::invalid_argument&) {
             // Check for boolean values
             if (input == "true") {
-                environment.define(stmt->variableName.lexeme, makeBoolean(true));
+                environment->define(stmt->variableName.lexeme, makeBoolean(true));
             } else if (input == "false") {
-                environment.define(stmt->variableName.lexeme, makeBoolean(false));
+                environment->define(stmt->variableName.lexeme, makeBoolean(false));
             } else if (input.front() == '[' && input.back() == ']') {
                 // Basic array parsing
                 std::vector<Value> array;
@@ -725,16 +752,16 @@ public:
                     array.push_back(makeString(item));
                 }
                 
-                environment.define(stmt->variableName.lexeme, makeArray(array));
+                environment->define(stmt->variableName.lexeme, makeArray(array));
             } else {
                 // Not a number or boolean, treat as string
-                environment.define(stmt->variableName.lexeme, makeString(input));
+                environment->define(stmt->variableName.lexeme, makeString(input));
             }
         }
         catch (const std::out_of_range&) {
             // Number out of range
             std::cerr << "Warning: Number out of range, treating as string" << std::endl;
-            environment.define(stmt->variableName.lexeme, makeString(input));
+            environment->define(stmt->variableName.lexeme, makeString(input));
         }
     }
     
@@ -754,7 +781,58 @@ public:
 
     void visit(AssignExpr* expr) override {
         expr->value->accept(this);
-        environment.assign(expr->name.lexeme, result);
+        environment->assign(expr->name.lexeme, result);
+    }
+
+    // Function declaration visitor
+    void visit(FunctionStmt* stmt) override {
+        auto function = std::make_shared<AxScriptFunction>(stmt, environment);
+        auto value = makeFunction(function);
+        environment->define(stmt->name.lexeme, value);
+    }
+
+    // Function call visitor
+    void visit(CallExpr* expr) override {
+        // Evaluate the callee (should be a function)
+        expr->callee->accept(this);
+        auto callee = result;
+        
+        if (!isFunction(callee)) {
+            throw std::runtime_error("Can only call functions.");
+        }
+        
+        // Evaluate all arguments
+        std::vector<Value> arguments;
+        for (const auto& arg : expr->arguments) {
+            arg->accept(this);
+            arguments.push_back(result);
+        }
+        
+        auto function = asFunction(callee);
+        
+        // Check arity
+        if (arguments.size() != function->arity()) {
+            throw std::runtime_error(
+                "Expected " + std::to_string(function->arity()) + 
+                " arguments but got " + std::to_string(arguments.size()) + "."
+            );
+        }
+        
+        // Call the function
+        result = function->call(this, arguments);
+    }
+
+    // Return statement visitor
+    void visit(ReturnStmt* stmt) override {
+        Value value = makeNumber(0); // Default return value
+        
+        if (stmt->value != nullptr) {
+            stmt->value->accept(this);
+            value = result;
+        }
+        
+        // Throw special exception to unwind the call stack
+        throw Return(value);
     }
 
     void interpret(const std::vector<std::unique_ptr<Stmt>> &statements)
