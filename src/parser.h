@@ -577,6 +577,38 @@ private:
 
         if (match({TokenType::EQUAL})) {
             auto equals = previous();
+            
+            // Check for fixed-size array initialization pattern: array[5] = {1, 2, 3, 4, 5}
+            if (auto* indexExpr = dynamic_cast<IndexExpr*>(expr.get())) {
+                // Check for array literal init with curly braces
+                if (check(TokenType::LEFT_CURLY)) {
+                    advance(); // consume '{'
+                    
+                    std::vector<std::unique_ptr<Expr>> elements;
+                    if (!check(TokenType::RIGHT_CURLY)) {
+                        do {
+                            elements.push_back(expression());
+                        } while (match({TokenType::COMMA}));
+                    }
+                    
+                    consume(TokenType::RIGHT_CURLY, "Expect '}' after array elements.");
+                    
+                    // Extract size from the index expression
+                    int arraySize = 0;
+                    if (auto* numExpr = dynamic_cast<NumberExpr*>(indexExpr->index.get())) {
+                        arraySize = static_cast<int>(numExpr->value);
+                    } else {
+                        throw std::runtime_error("Array size must be a number literal");
+                    }
+                    
+                    // Create FixedArrayExpr with the size and elements
+                    return std::make_unique<AssignExpr>(
+                        dynamic_cast<VariableExpr*>(indexExpr->object.get())->name,
+                        std::make_unique<FixedArrayExpr>(arraySize, std::move(elements))
+                    );
+                }
+            }
+            
             auto value = assignment();
 
             if (auto* varExpr = dynamic_cast<VariableExpr*>(expr.get())) {

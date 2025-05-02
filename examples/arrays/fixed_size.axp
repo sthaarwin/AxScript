@@ -1,0 +1,34 @@
+// Example of fixed-size array initialization
+print "Fixed-size array example:\n";
+
+// Initialize a fixed-size array with 5 elements
+var array;        // First declare the variable
+array[5] = {1, 2, 3, 4, 5};  // Then initialize it with fixed size and elements
+print "Full array: ";
+print array;
+print "\n";
+
+// Access individual elements
+print "First element: " + array[0] + "\n";
+print "Last element: " + array[4] + "\n";
+
+// Modify an element
+print "\nModifying an element:\n";
+array[2] = 99;
+print "After changing index 2 to 99: ";
+print array;
+print "\n";
+
+// Fixed-size array with fewer elements (will be padded with zeros)
+var shortArray;
+shortArray[5] = {10, 20};
+print "\nArray with fewer elements (padded with zeros):\n";
+print shortArray;
+print "\n";
+
+// Fixed-size array with more elements (will be truncated)
+var truncatedArray;
+truncatedArray[3] = {100, 200, 300, 400, 500};
+print "\nArray with size 3 but 5 elements (will be truncated):\n";
+print truncatedArray;
+print "\n";

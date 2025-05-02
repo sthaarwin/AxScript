@@ -9,6 +9,7 @@ enum class TokenType {
     // Single character tokens
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
     LEFT_BRACKET, RIGHT_BRACKET, // Added for array support
+    LEFT_CURLY, RIGHT_CURLY, // Added for fixed size array initialization
     COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR, PERCENT, // Added PERCENT
     
     // One or two character tokens

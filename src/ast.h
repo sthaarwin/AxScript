@@ -125,6 +125,19 @@ public:
     }
 };
 
+class FixedArrayExpr : public Expr {
+public:
+    int size;
+    std::vector<std::unique_ptr<Expr>> elements;
+
+    FixedArrayExpr(int size, std::vector<std::unique_ptr<Expr>>&& elements) 
+        : size(size), elements(std::move(elements)) {}
+
+    void accept(Visitor* visitor) override {
+        visitor->visit(this);
+    }
+};
+
 class IndexExpr : public Expr {
 public:
     std::unique_ptr<Expr> object;

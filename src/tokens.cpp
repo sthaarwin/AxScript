@@ -10,6 +10,8 @@ std::string tokenTypeToString(TokenType type) {
         case TokenType::RIGHT_BRACE: return "}";
         case TokenType::LEFT_BRACKET: return "[";
         case TokenType::RIGHT_BRACKET: return "]";
+        case TokenType::LEFT_CURLY: return "{";
+        case TokenType::RIGHT_CURLY: return "}";
         case TokenType::COMMA: return ",";
         case TokenType::DOT: return ".";
         case TokenType::MINUS: return "-";

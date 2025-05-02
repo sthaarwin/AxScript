@@ -15,6 +15,8 @@ AxScript is a simple yet powerful programming language implemented in C++ that s
 - Loops with increment, decrement, and custom step values
 - Loop control with `break` and `continue`
 - Comments (single-line and multi-line)
+- Functions with parameters and return values
+- Fixed-size arrays with initialization
 - Interactive REPL (Read-Eval-Print Loop) interface
 - Robust error handling and recovery
 
@@ -24,7 +26,7 @@ AxScript is a simple yet powerful programming language implemented in C++ that s
 ```
 var x = 42;
 print x;
-var result = x + 8;j
+var result = x + 8;
 print result;
 ```
 
@@ -104,6 +106,32 @@ loop i = 0 to 4 {
 var array1 = [1, 2, 3];
 var array2 = [4, 5, 6];
 var combined = array1 + array2;  // [1, 2, 3, 4, 5, 6]
+
+// Fixed-size arrays
+var data;
+data[5] = {1, 2, 3, 4, 5};  // Create array with fixed size 5
+var shortArray;
+shortArray[3] = {10};  // Creates [10, 0, 0] (pads with zeros)
+```
+
+**Functions:**
+```
+// Define a function with parameters and return value
+fun add(a, b) {
+    return a + b;
+}
+
+// Call a function and use its result
+var result = add(5, 3);
+print "5 + 3 = " + result;  // Prints "5 + 3 = 8"
+
+// Function with no parameters
+fun sayHello() {
+    print "Hello, world!";
+}
+
+// Nested function calls
+print add(add(1, 2), add(3, 4));  // Prints 10
 ```
 
 ## Project Structure
@@ -113,6 +141,7 @@ var combined = array1 + array2;  // [1, 2, 3, 4, 5, 6]
 ├── src/                   # Source code
 │   ├── ast.h              # Abstract Syntax Tree definitions
 │   ├── environment.h      # Variable environment management
+│   ├── function.cpp       # Function implementation
 │   ├── interpreter.h      # Code interpretation logic
 │   ├── lexer.cpp          # Lexical analysis implementation
 │   ├── lexer.h            # Lexer header
@@ -123,7 +152,8 @@ var combined = array1 + array2;  // [1, 2, 3, 4, 5, 6]
 │   └── visitor.h          # Visitor pattern implementation
 ├── examples/              # Example programs
 │   ├── arrays/            # Array examples
-│   │   └── basic.axp      # Basic array operations
+│   │   ├── basic.axp      # Basic array operations
+│   │   └── fixed_size.axp # Fixed-size array examples
 │   ├── basic/             # Basic language examples
 │   │   ├── hello.axp      # Simple hello world program
 │   │   ├── input.axp      # User input example
@@ -139,6 +169,8 @@ var combined = array1 + array2;  // [1, 2, 3, 4, 5, 6]
 │   │   ├── else.axp       # If-else statements
 │   │   ├── if_statement.axp # Various comparison types
 │   │   └── or.axp         # Logical OR operations
+│   ├── functions/         # Function examples
+│   │   └── basic.axp      # Basic function usage
 │   └── loops/             # Loop examples
 │       ├── break.axp      # Breaking out of loops
 │       ├── continue.axp   # Continue to next iteration
@@ -220,11 +252,33 @@ name = newValue;          // Assignment to existing variable
 
 ### Arrays
 ```
+// Dynamic arrays
 var arr = [1, 2, 3, 4, 5];    // Create an array
 print arr[0];                 // Access element (indexes start at 0)
 arr[1] = 42;                  // Modify element
-var len = arr.length;         // Get array length
 var combined = arr1 + arr2;   // Concatenate arrays
+
+// Fixed-size arrays
+var fixedArray;
+fixedArray[5] = {1, 2, 3, 4, 5};  // Create array with exactly 5 elements
+```
+
+### Functions
+```
+// Define a function
+fun functionName(param1, param2) {
+    // Function body
+    return expression;  // Optional return statement
+}
+
+// Call a function
+functionName(arg1, arg2);
+
+// Assign function result to variable
+var result = functionName(arg1, arg2);
+
+// Nested function calls
+outerFunction(innerFunction(value));
 ```
 
 ### Print Statement
@@ -315,6 +369,8 @@ The AxScript interpreter provides detailed error messages for:
 - Array index out of bounds
 - Division by zero
 - Invalid operations
+- Undefined functions
+- Incorrect number of function arguments
 
 Examples:
 ```
@@ -322,10 +378,13 @@ Examples:
 Runtime error: Undefined variable 'x'
 
 >> var x = "hello" - 5;
-Runtime error: Operands must be two numbers.
+Runtime error: Operands must be numbers for operator '-'.
 
 >> var arr = [1, 2, 3]; print arr[10];
 Runtime error: Array index out of bounds: 10
+
+>> add(1);
+Runtime error: Expected 2 arguments but got 1.
 ```
 
 ## Future Improvements
@@ -335,7 +394,8 @@ Runtime error: Array index out of bounds: 10
 - [x] Logical operations (AND, OR)
 - [x] Boolean data type
 - [x] Arrays
-- [ ] Functions with parameters and return values
+- [x] Functions with parameters and return values
+- [x] Fixed-size arrays
 - [ ] User-defined classes and objects
 - [ ] Standard library (math, string, file I/O)
 - [ ] Better error messages with line number reporting
@@ -362,10 +422,6 @@ Please ensure your code follows the existing style and includes appropriate test
 ## Author
 
 Arwin Shrestha
-
-## License
-
-This project is open-source and available under the MIT License.
 
 ---
 Feel free to open issues or contribute to the project!

@@ -178,6 +178,29 @@ public:
         }
     }
 
+    void visit(FixedArrayExpr* expr) override {
+        std::vector<Value> array;
+        
+        // Populate array with elements
+        for (const auto& element : expr->elements) {
+            element->accept(this);
+            array.push_back(result);
+        }
+        
+        // Check if we need to pad the array to match the specified size
+        while (array.size() < static_cast<size_t>(expr->size)) {
+            // Pad with default value (0)
+            array.push_back(makeNumber(0));
+        }
+        
+        // If provided more elements than specified size, trim the array
+        if (array.size() > static_cast<size_t>(expr->size)) {
+            array.resize(expr->size);
+        }
+        
+        result = makeArray(array);
+    }
+
     void visit(ArrayExpr* expr) override {
         std::vector<Value> array;
         for (const auto& element : expr->elements) {

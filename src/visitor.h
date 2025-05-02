@@ -28,6 +28,7 @@ class AndConditionStmt;
 class OrConditionStmt;
 class AssignExpr;
 class ArrayExpr;
+class FixedArrayExpr;
 class IndexExpr;
 class AssignIndexExpr;
 class FunctionStmt;
@@ -63,6 +64,7 @@ public:
     virtual void visit(OrConditionStmt* stmt) = 0;
     virtual void visit(AssignExpr* expr) = 0;
     virtual void visit(ArrayExpr* expr) = 0;
+    virtual void visit(FixedArrayExpr* expr) = 0;
     virtual void visit(IndexExpr* expr) = 0;
     virtual void visit(AssignIndexExpr* expr) = 0;
     virtual void visit(FunctionStmt* stmt) = 0;

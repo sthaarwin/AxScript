@@ -104,9 +104,9 @@ TokenType Lexer::identifyToken(char ch)
     case ')':
         return TokenType::RIGHT_PAREN;
     case '{':
-        return TokenType::LEFT_BRACE;
+        return TokenType::LEFT_CURLY;
     case '}':
-        return TokenType::RIGHT_BRACE;
+        return TokenType::RIGHT_CURLY;
     case '[':
         return TokenType::LEFT_BRACKET;
     case ']':
